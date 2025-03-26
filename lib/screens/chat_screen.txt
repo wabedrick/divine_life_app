@@ -1,0 +1,81 @@
+import 'package:flutter/material.dart';
+
+class ChatScreen extends StatelessWidget {
+  // Static chat messages
+  final List<Map<String, String>> messages = [
+    {'sender': 'User1', 'message': 'Hello everyone!'},
+    {'sender': 'User2', 'message': 'Hi there!'},
+    {'sender': 'User3', 'message': 'How are you all?'},
+  ];
+
+  ChatScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Group Chat')),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              padding: EdgeInsets.all(16.0),
+              itemCount: messages.length,
+              itemBuilder: (context, index) {
+                final message = messages[index];
+                return Container(
+                  margin: EdgeInsets.only(bottom: 16.0),
+                  padding: EdgeInsets.all(12.0),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        message['sender']!,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade800,
+                        ),
+                      ),
+                      SizedBox(height: 4.0),
+                      Text(message['message']!),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Type a message...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30.0),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8.0),
+                IconButton(
+                  icon: Icon(Icons.send),
+                  onPressed: () {
+                    // Simulate sending a message
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('Message sent')));
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
