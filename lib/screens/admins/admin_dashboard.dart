@@ -274,7 +274,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         return Card(
           margin: EdgeInsets.only(bottom: 12),
           child: ListTile(
-            title: Text(report.mcName ?? 'Unknown MC'),
+            title: Text(report.mcName),
             subtitle: Text(
               'Week of ${DateFormat('MMM d, yyyy').format(report.weekStarting)}',
             ),

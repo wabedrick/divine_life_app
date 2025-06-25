@@ -66,9 +66,11 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
         isLoading = false;
       });
     } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error loading dashboard: ${e.toString()}')),
@@ -282,7 +284,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
         return Card(
           margin: EdgeInsets.only(bottom: 12),
           child: ListTile(
-            title: Text(report.mcName ?? 'Unknown MC'),
+            title: Text(report.mcName),
             subtitle: Text(
               'Week of ${DateFormat('MMM d, yyyy').format(report.weekStarting)}',
             ),

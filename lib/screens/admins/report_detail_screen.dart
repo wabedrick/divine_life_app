@@ -25,7 +25,7 @@ class ReportDetailScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      report.mcName ?? 'Unknown MC',
+                      report.mcName,
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     SizedBox(height: 8),
@@ -38,7 +38,7 @@ class ReportDetailScreen extends StatelessWidget {
                     _buildDetailRow('New Members', '${report.newMembers}'),
                     _buildDetailRow(
                       'Submitted On',
-                      DateFormat('MMM d, yyyy').format(report.submittedAt),
+                      DateFormat('MMM d, yyyy').format(report.submissionDate),
                     ),
                     SizedBox(height: 16),
                     Text(
@@ -55,7 +55,7 @@ class ReportDetailScreen extends StatelessWidget {
                         color: Colors.grey[100],
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text(report.meetingNotes),
+                      child: Text(report.notes),
                     ),
                     SizedBox(height: 16),
                     Text(
@@ -72,7 +72,7 @@ class ReportDetailScreen extends StatelessWidget {
                         color: Colors.grey[100],
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text(report.challenges),
+                      child: Text(report.testimony),
                     ),
                   ],
                 ),

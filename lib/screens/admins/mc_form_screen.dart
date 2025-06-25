@@ -1,13 +1,12 @@
-// lib/screens/super_admin/mc_form_screen.dart
-import 'package:divine_life_app/services/mc_services.dart';
+// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import '../../models/mc_model.dart';
+import '../../services/missional_community_service.dart';
 
 class MCFormScreen extends StatefulWidget {
   final MissionalCommunity? mc;
 
-  // ignore: use_key_in_widget_constructors
-  const MCFormScreen({this.mc});
+  const MCFormScreen({super.key, this.mc});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -19,7 +18,7 @@ class _MCFormScreenState extends State<MCFormScreen> {
   final _nameController = TextEditingController();
   final _locationController = TextEditingController();
   final _leaderNameController = TextEditingController();
-  final _leaderEmailController = TextEditingController();
+  final _leaderPhoneNumberController = TextEditingController();
   bool _isLoading = false;
   bool _isEditing = false;
 
@@ -32,7 +31,7 @@ class _MCFormScreenState extends State<MCFormScreen> {
       _nameController.text = widget.mc!.name;
       _locationController.text = widget.mc!.location;
       _leaderNameController.text = widget.mc!.leaderName;
-      _leaderEmailController.text = widget.mc!.leaderEmail;
+      _leaderPhoneNumberController.text = widget.mc!.leaderPhoneNumber;
     }
   }
 
@@ -41,11 +40,12 @@ class _MCFormScreenState extends State<MCFormScreen> {
     _nameController.dispose();
     _locationController.dispose();
     _leaderNameController.dispose();
-    _leaderEmailController.dispose();
+    _leaderPhoneNumberController.dispose();
     super.dispose();
   }
 
   Future<void> _saveMC() async {
+    // Validate form
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -58,34 +58,94 @@ class _MCFormScreenState extends State<MCFormScreen> {
         name: _nameController.text.trim(),
         location: _locationController.text.trim(),
         leaderName: _leaderNameController.text.trim(),
-        leaderEmail: _leaderEmailController.text.trim(),
-        createdAt: _isEditing ? widget.mc!.createdAt : DateTime.now(),
+        leaderPhoneNumber: _leaderPhoneNumberController.text.trim(),
       );
 
+      // final mcServices = McServices();
+      dynamic result;
+
       if (_isEditing) {
-        await McServices.updateMissionalCommunity(mcData);
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Missional community updated successfully')),
-        );
+        try {
+          final result = await MissionalCommunityService.updateMC(mcData);
+          if (result['success']) {
+            _showSuccessMessage(
+              result['message'] ?? 'Missional community updated successfully',
+            );
+            if (mounted) Navigator.of(context).pop(true);
+            return;
+          } else {
+            _showErrorMessage(result['message'] ?? 'Failed to update');
+          }
+        } catch (e) {
+          _showErrorMessage('Failed to update: ${e.toString()}');
+        }
       } else {
-        await McServices.createMissionalCommunity(mcData);
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Missional community created successfully')),
-        );
+        result = await MissionalCommunityService.createMC(mcData);
       }
-      if (!mounted) return;
-      Navigator.pop(context, true);
+
+      // Handle the result with user-friendly messaging
+      if (result['success']) {
+        _showSuccessMessage(
+          result['message'] ??
+              (_isEditing
+                  ? 'Missional community updated successfully'
+                  : 'Missional community created successfully'),
+        );
+        if (mounted) Navigator.pop(context, true);
+        return;
+      } else {
+        _showErrorMessage(result['message'] ?? 'An unexpected error occurred');
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      _showErrorMessage('Error: ${_getErrorMessage(e)}');
+    } finally {
+      // Ensure loading state is reset
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
+  }
+
+  // Helper method to extract meaningful error messages
+  String _getErrorMessage(dynamic error) {
+    String errorMessage = error.toString();
+
+    // Common error message parsing
+    if (errorMessage.contains('Failed to connect')) {
+      return 'Network error. Please check your internet connection.';
+    }
+
+    if (errorMessage.contains('already exists')) {
+      return 'A Missional Community with this name already exists.';
+    }
+
+    return errorMessage.length > 100
+        ? 'An unexpected error occurred. Please try again.'
+        : errorMessage;
+  }
+
+  void _showSuccessMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _showErrorMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 3),
+      ),
+    );
   }
 
   @override
@@ -108,12 +168,16 @@ class _MCFormScreenState extends State<MCFormScreen> {
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(
-                  labelText: 'Name',
+                  labelText: 'Missional Community Name',
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.group),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a name';
+                  }
+                  if (value.length < 3) {
+                    return 'Name must be at least 3 characters long';
                   }
                   return null;
                 },
@@ -124,6 +188,7 @@ class _MCFormScreenState extends State<MCFormScreen> {
                 decoration: InputDecoration(
                   labelText: 'Location',
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.location_on),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -138,6 +203,7 @@ class _MCFormScreenState extends State<MCFormScreen> {
                 decoration: InputDecoration(
                   labelText: 'Leader Name',
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.person),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -148,15 +214,20 @@ class _MCFormScreenState extends State<MCFormScreen> {
               ),
               SizedBox(height: 16),
               TextFormField(
-                controller: _leaderEmailController,
+                controller: _leaderPhoneNumberController,
                 decoration: InputDecoration(
-                  labelText: 'Leader Email',
+                  labelText: 'Leader Phone Number',
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.phone),
                 ),
-                keyboardType: TextInputType.emailAddress,
+                keyboardType: TextInputType.phone,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter leader email';
+                    return 'Please enter leader phone number';
+                  }
+                  // Basic phone number validation
+                  if (!RegExp(r'^[0-9]{10}$').hasMatch(value)) {
+                    return 'Please enter a valid 10-digit phone number';
                   }
                   return null;
                 },

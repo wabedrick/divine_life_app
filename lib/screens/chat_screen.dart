@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart'; // For date formatting
+import 'package:flutter/widgets.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key, required this.user});
@@ -18,6 +19,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   List<dynamic> _messages = [];
   final Map<String, bool> _expandedComments = {};
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -36,6 +38,7 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() {
         _messages = data['messages'];
       });
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     }
   }
 
@@ -54,7 +57,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
       if (response.statusCode == 200) {
         _messageController.clear();
-        _fetchMessages(); // Refresh the messages
+        await _fetchMessages(); // Refresh the messages
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
       }
     }
   }
@@ -92,9 +96,15 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   String _convertToLocalTime(String utcTimestamp) {
-    final utcDate = DateTime.parse(utcTimestamp).toUtc();
-    final localDate = utcDate.toLocal();
-    return DateFormat('HH:mm').format(localDate);
+    try {
+      final utcDate = DateTime.parse(utcTimestamp).toUtc();
+      final localDate = utcDate.toLocal();
+      // Only show time in 24-hour format (e.g., 15:30)
+      return DateFormat('HH:mm').format(localDate);
+    } catch (e) {
+      debugPrint('Error converting time: $e');
+      return utcTimestamp; // Return original timestamp if conversion fails
+    }
   }
 
   Map<String, List<dynamic>> _groupMessagesByDate(List<dynamic> messages) {
@@ -220,6 +230,16 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final groupedMessages = _groupMessagesByDate(_messages);
@@ -233,6 +253,7 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           Expanded(
             child: ListView.builder(
+              controller: _scrollController,
               padding: EdgeInsets.all(16.0),
               itemCount: groupedMessages.length,
               itemBuilder: (context, index) {

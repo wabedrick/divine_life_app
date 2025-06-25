@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../models/user_model.dart';
+import '../../models/admin_model.dart';
 import '../../services/api_services.dart';
 import 'admin_form_screen.dart';
 
@@ -12,13 +12,41 @@ class AdminManagementScreen extends StatefulWidget {
 }
 
 class _AdminManagementScreenState extends State<AdminManagementScreen> {
-  List<User> users = [];
+  List<Admin> admins = [];
+  List<Admin> filteredUsers = [];
   bool isLoading = true;
+  TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadAdmins();
+    searchController.addListener(_filterUsers);
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  void _filterUsers() {
+    final query = searchController.text.toLowerCase();
+
+    if (query.isEmpty) {
+      setState(() {
+        filteredUsers = List.from(admins);
+      });
+    } else {
+      setState(() {
+        filteredUsers =
+            admins.where((user) {
+              return user.username.toLowerCase().contains(query) ||
+                  user.email.toLowerCase().contains(query) ||
+                  user.role.toLowerCase().contains(query);
+            }).toList();
+      });
+    }
   }
 
   Future<void> _loadAdmins() async {
@@ -29,7 +57,8 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
     try {
       final adminList = await ApiService.getAdmins();
       setState(() {
-        users = adminList;
+        admins = adminList;
+        filteredUsers = List.from(admins);
         isLoading = false;
       });
     } catch (e) {
@@ -43,7 +72,7 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
     }
   }
 
-  void _deleteAdmin(User admin) async {
+  void _deleteAdmin(Admin admin) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder:
@@ -87,74 +116,97 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
         title: Text('Admin Management'),
         backgroundColor: Colors.blue,
       ),
-      body:
-          isLoading
-              ? Center(child: CircularProgressIndicator())
-              : RefreshIndicator(
-                onRefresh: _loadAdmins,
-                child:
-                    users.isEmpty
-                        ? Center(child: Text('No admins found'))
-                        : ListView.builder(
-                          itemCount: users.length,
-                          itemBuilder: (context, index) {
-                            final admin = users[index];
-                            return Card(
-                              margin: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              child: ListTile(
-                                title: Text(admin.username),
-                                subtitle: Text(admin.email),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      admin.role.toUpperCase(),
-                                      style: TextStyle(
-                                        color:
-                                            admin.role == 'super_admin'
-                                                ? Colors.blue
-                                                : Colors.blue,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    SizedBox(width: 16),
-                                    IconButton(
-                                      icon: Icon(
-                                        Icons.edit,
-                                        color: Colors.blue,
-                                      ),
-                                      onPressed: () async {
-                                        final result = await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder:
-                                                (context) => AdminFormScreen(
-                                                  user: admin,
-                                                ),
-                                          ),
-                                        );
-                                        if (result == true) {
-                                          _loadAdmins();
-                                        }
-                                      },
-                                    ),
-                                    IconButton(
-                                      icon: Icon(
-                                        Icons.delete,
-                                        color: Colors.red,
-                                      ),
-                                      onPressed: () => _deleteAdmin(admin),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: searchController,
+              decoration: InputDecoration(
+                hintText: 'Search by username, email, or role',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(26.0),
+                  borderSide: BorderSide(color: Colors.blue, width: 2),
+                ),
               ),
+            ),
+          ),
+          Expanded(
+            child:
+                isLoading
+                    ? Center(child: CircularProgressIndicator())
+                    : RefreshIndicator(
+                      onRefresh: _loadAdmins,
+                      child:
+                          filteredUsers.isEmpty
+                              ? Center(child: Text('No admins found'))
+                              : ListView.builder(
+                                itemCount: filteredUsers.length,
+                                itemBuilder: (context, index) {
+                                  final admin = filteredUsers[index];
+                                  return Card(
+                                    margin: EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 8,
+                                    ),
+                                    child: ListTile(
+                                      title: Text(admin.username),
+                                      subtitle: Text(admin.email),
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            admin.role.toUpperCase(),
+                                            style: TextStyle(
+                                              color:
+                                                  admin.role == 'super_admin'
+                                                      ? Colors.blue
+                                                      : Colors.blue,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          SizedBox(width: 16),
+                                          IconButton(
+                                            icon: Icon(
+                                              Icons.edit,
+                                              color: Colors.blue,
+                                            ),
+                                            onPressed: () async {
+                                              final result =
+                                                  await Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder:
+                                                          (context) =>
+                                                              AdminFormScreen(
+                                                                admin: admin,
+                                                              ),
+                                                    ),
+                                                  );
+                                              if (result == true) {
+                                                _loadAdmins();
+                                              }
+                                            },
+                                          ),
+                                          IconButton(
+                                            icon: Icon(
+                                              Icons.delete,
+                                              color: Colors.red,
+                                            ),
+                                            onPressed:
+                                                () => _deleteAdmin(admin),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                    ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final result = await Navigator.push(

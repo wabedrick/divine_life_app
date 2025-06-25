@@ -1,11 +1,13 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
-import '../../models/user_model.dart';
+import '../../models/admin_model.dart';
 import '../../services/api_services.dart';
 
 class AdminFormScreen extends StatefulWidget {
-  final User? user;
+  final Admin? admin;
 
-  const AdminFormScreen({super.key, this.user});
+  const AdminFormScreen({super.key, this.admin});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -26,13 +28,13 @@ class _AdminFormScreenState extends State<AdminFormScreen> {
   @override
   void initState() {
     super.initState();
-    _isEditing = widget.user != null;
+    _isEditing = widget.admin != null;
 
     if (_isEditing) {
-      _nameController.text = widget.user!.username;
-      _emailController.text = widget.user!.email;
-      _selectedRole = widget.user!.role;
-      _mcNameController.text = widget.user!.mc;
+      _nameController.text = widget.admin!.username;
+      _emailController.text = widget.admin!.email;
+      _selectedRole = widget.admin!.role;
+      _mcNameController.text = widget.admin!.mcName ?? '';
     }
   }
 
@@ -64,29 +66,55 @@ class _AdminFormScreenState extends State<AdminFormScreen> {
   }
 
   // Improved success handling method
+  // void _showSuccessDialog(String message) {
+  //   showDialog(
+  //     context: context,
+  //     builder:
+  //         (ctx) => AlertDialog(
+  //           title: Text('Success', style: TextStyle(color: Colors.green)),
+  //           content: Text(message),
+  //           actions: [
+  //             TextButton(
+  //               onPressed: () {
+  //                 Navigator.of(ctx).pop(); // Close dialog
+  //                 Navigator.of(context).pop(true); // Return to previous screen
+  //               },
+  //               child: Text('Okay'),
+  //             ),
+  //           ],
+  //         ),
+  //   );
+  // }
+
   void _showSuccessDialog(String message) {
-    showDialog(
-      context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: Text('Success', style: TextStyle(color: Colors.green)),
-            content: Text(message),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(ctx).pop(); // Close dialog
-                  Navigator.of(context).pop(true); // Return to previous screen
-                },
-                child: Text('Okay'),
-              ),
-            ],
-          ),
-    );
+    // First, log the success message for debugging
+    print('SUCCESS: $message');
+
+    // Then show the dialog to the user
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder:
+            (ctx) => AlertDialog(
+              title: Text('Success'),
+              content: Text(message),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                  },
+                  child: Text('OK'),
+                ),
+              ],
+            ),
+      );
+    }
   }
 
   Future<void> _saveAdmin() async {
     // Validate form
     if (!_formKey.currentState!.validate()) {
+      print('Form validation failed');
       return;
     }
 
@@ -96,51 +124,105 @@ class _AdminFormScreenState extends State<AdminFormScreen> {
     final password = _passwordController.text.trim();
     final mcName = _mcNameController.text.trim();
 
+    print('Preparing to save admin: $name, $email, $mcName, $_selectedRole');
+
     // Additional input validations
     if (!_isValidEmail(email)) {
       _showErrorDialog('Please enter a valid email address');
       return;
     }
 
-    if (!_isEditing && password.length < 6) {
-      _showErrorDialog('Password must be at least 6 characters long');
+    // Updated password validation to match PHP requirements (8 characters)
+    if (!_isEditing && password.length < 8) {
+      _showErrorDialog('Password must be at least 8 characters long');
+      return;
+    }
+
+    // Validate medical center name is not empty
+    if (mcName.isEmpty) {
+      _showErrorDialog('Medical center name is required');
       return;
     }
 
     setState(() {
       _isLoading = true;
+      print('Set loading state to true');
     });
 
     try {
-      final adminData = User(
+      final adminData = Admin(
+        id: _isEditing ? widget.admin?.id : null, // Include ID for editing
         username: name,
         email: email,
         role: _selectedRole,
+        mcName: mcName,
         password: password.isNotEmpty ? password : null,
-        mc: mcName,
       );
 
+      print('Admin data prepared: ${adminData.toJson()}');
+      print('Is editing mode: $_isEditing');
+
       if (_isEditing) {
-        await ApiService.updateAdmin(adminData);
+        if (widget.admin == null || widget.admin?.id == null) {
+          print('Invalid admin ID for editing');
+          throw Exception('Invalid admin data for editing');
+        }
+
+        print('Calling updateAdmin API...');
+        final result = await ApiService.updateAdmin(adminData);
+        print('API call completed successfully: ${result.toJson()}');
+
+        // If we get here without exception, show success
+        print('Showing success dialog');
         _showSuccessDialog('Admin updated successfully');
+
+        // Wait briefly to ensure dialog is visible before potentially popping
+        await Future.delayed(Duration(milliseconds: 1000));
+        // ignore: use_build_context_synchronously
+        Navigator.of(context).pop(true); // Return success
       } else {
+        print('Calling createAdmin API...');
         await ApiService.createAdmin(adminData);
+        print('Admin created successfully');
         _showSuccessDialog('Admin created successfully');
-      }
-    } catch (e) {
-      // More specific error handling
-      String errorMessage = 'An unexpected error occurred';
-      if (e is ApiException) {
-        errorMessage = e.message;
-      } else if (e is NetworkException) {
-        errorMessage = 'Network error. Please check your connection.';
+
+        // Wait briefly to ensure dialog is visible
+        await Future.delayed(Duration(milliseconds: 1000));
+        // ignore: use_build_context_synchronously
+        Navigator.of(context).pop(true); // Return success
       }
 
+      // Only pop if still mounted and operation was successful
+      if (mounted) {
+        print('Navigating back...');
+        Navigator.of(context).pop(true); // Return success
+      }
+    } catch (e) {
+      // Enhanced error handling with detailed logging
+      print('ERROR CAUGHT: ${e.toString()}');
+
+      String errorMessage = 'Failed to save admin';
+
+      if (e.toString().contains('MC not found')) {
+        errorMessage = 'The specified MC was not found';
+      } else if (e.toString().contains('Invalid email address')) {
+        errorMessage = 'Please enter a valid email address';
+      } else if (e.toString().contains('Password must be')) {
+        errorMessage = 'Password must be at least 8 characters';
+      } else if (e is NetworkException) {
+        errorMessage = 'Network error. Please check your connection.';
+      } else {
+        // Include the actual error message
+        errorMessage = 'Error: ${e.toString()}';
+      }
+
+      print('Showing error dialog: $errorMessage');
       _showErrorDialog(errorMessage);
     } finally {
       if (mounted) {
         setState(() {
           _isLoading = false;
+          print('Set loading state to false');
         });
       }
     }

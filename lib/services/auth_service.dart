@@ -33,28 +33,26 @@ class AuthService {
           )
           .timeout(const Duration(seconds: 15));
 
-      // Check for HTTP errors
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw AuthException('Server error: ${response.statusCode}');
-      }
-
       final Map<String, dynamic> data = json.decode(response.body);
 
-      if (data['success'] == true) {
-        // Ensure data contains user information
-        if (data['user'] == null) {
-          throw AuthException('Invalid server response: missing user data');
-        }
-
-        // Create user object
-        final User user = User.fromJson(data['user']);
-
+      if (response.statusCode == 200 && data['status'] == 'success') {
         // Save user session data
-        await _saveUserSession(user, data['token'] ?? '');
-
-        return user;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_tokenKey, data['token'] ?? '');
+        await prefs.setString(_userKey, json.encode({
+          'username': data['username'],
+          'email': data['email'],
+          'role': data['role'],
+          'mc': data['mc_id']?.toString() ?? '',
+        }));
+        return User(
+          username: data['username'] ?? '',
+          email: data['email'] ?? '',
+          role: data['role'] ?? '',
+          password: '',
+          mc: data['mc_id']?.toString() ?? '',
+        );
       } else {
-        // Handle known error responses
         throw AuthException(data['message'] ?? 'Login failed');
       }
     } on http.ClientException catch (_) {

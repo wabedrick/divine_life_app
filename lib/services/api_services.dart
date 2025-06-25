@@ -1,8 +1,11 @@
 // lib/services/api_service.dart
+// ignore_for_file: avoid_print
+
 import 'dart:convert';
 // ignore: depend_on_referenced_packages
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/admin_model.dart';
 import '../models/user_model.dart';
 
 class ApiService {
@@ -34,15 +37,19 @@ class ApiService {
       body: jsonEncode({'username': username, 'password': password}),
     );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      // Save token
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200 && data['status'] == 'success') {
+      // Save token and user info
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(tokenKey, data['token']);
-
+      await prefs.setString(tokenKey, data['token'] ?? '');
+      await prefs.setString('username', data['username'] ?? '');
+      await prefs.setString('email', data['email'] ?? '');
+      await prefs.setString('role', data['role'] ?? '');
+      await prefs.setInt('mc_id', int.tryParse(data['mc_id'].toString()) ?? 0);
       return data;
     } else {
-      throw Exception('Failed to login: ${response.body}');
+      // Return error response for UI to handle
+      return data;
     }
   }
 
@@ -52,7 +59,7 @@ class ApiService {
   }
 
   // Admin Management
-  static Future<List<User>> getAdmins() async {
+  static Future<List<Admin>> getAdmins() async {
     final headers = await _getHeaders();
     final response = await http.get(
       Uri.parse('${baseUrl}get_admins.php'),
@@ -61,7 +68,7 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
-      return data.map((json) => User.fromJson(json)).toList();
+      return data.map((json) => Admin.fromJson(json)).toList();
     } else {
       throw Exception('Failed to load admins: ${response.body}');
     }
@@ -81,41 +88,88 @@ class ApiService {
     }
   }
 
-  static Future<User> createAdmin(User admin) async {
+  static Future<Admin> createAdmin(Admin admin) async {
     final headers = await _getHeaders();
+
+    // Modify the data to match what PHP expects
+    final requestData = {
+      'username': admin.username,
+      'email': admin.email,
+      'mc': admin.mcName, // CHANGE: mc_name to mc
+      'password': admin.password,
+      'role': admin.role,
+    };
+
+    print('Sending admin data: ${jsonEncode(requestData)}'); // Debugging
+
     final response = await http.post(
       Uri.parse('${baseUrl}register.php'),
       headers: headers,
-      body: jsonEncode(admin.toJson()),
+      body: jsonEncode(requestData),
     );
 
-    if (response.statusCode == 201) {
-      return User.fromJson(jsonDecode(response.body));
+    print('Response status: ${response.statusCode}'); // Debugging
+    print('Response body: ${response.body}'); // Debugging
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final responseData = jsonDecode(response.body);
+
+      // Handle the success message response from PHP
+      if (responseData['status'] == 'success') {
+        // Since PHP doesn't return the created admin object, return the original with an assumed ID
+        return admin;
+      } else {
+        throw Exception(responseData['message'] ?? 'Failed to create admin');
+      }
     } else {
       throw Exception('Failed to create admin: ${response.body}');
     }
   }
 
-  static Future<User> updateAdmin(User admin) async {
+  static Future<Admin> updateAdmin(Admin admin) async {
     final headers = await _getHeaders();
+
+    // Use the Admin class's toJson method to ensure consistency
+    final body = admin.toJson();
+
+    // Ensure ID is included for update
+    if (admin.id != null) {
+      body['id'] = admin.id;
+    }
+
     final response = await http.put(
       Uri.parse('${baseUrl}update_admin.php'),
       headers: headers,
-      body: jsonEncode(
-        <String, dynamic>{
-          // 'id': admin.id,
-          'username': admin.username,
-          'email': admin.email,
-          'role': admin.role,
-          'password': admin.password,
-        }..removeWhere((_, value) => value == null),
-      ),
+      body: jsonEncode(body),
     );
 
+    print(
+      'Update Admin Request body: ${jsonEncode(body)}',
+    ); // Additional debugging
+    print('Response status: ${response.statusCode}'); // Debugging
+    print('Response body: ${response.body}'); // Debugging
+
     if (response.statusCode == 200) {
-      return User.fromJson(jsonDecode(response.body));
+      final responseData = jsonDecode(response.body);
+
+      // Handle success message response
+      if (responseData['status'] == 'success') {
+        return admin; // Return the original admin if update was successful
+      } else {
+        throw Exception(responseData['message'] ?? 'Failed to update admin');
+      }
     } else {
-      throw Exception('Failed to update admin: ${response.body}');
+      // Parse the error message from the PHP response
+      try {
+        final errorResponse = jsonDecode(response.body);
+        final errorMessage =
+            errorResponse['message'] ??
+            errorResponse['error'] ??
+            'Failed to update admin';
+        throw Exception(errorMessage);
+      } catch (e) {
+        throw Exception('Failed to update admin: ${response.body}');
+      }
     }
   }
 

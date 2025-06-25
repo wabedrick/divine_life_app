@@ -311,8 +311,10 @@ class _EditEventScreenState extends State<EditEventScreen> {
                       date: DateTime.parse(_dateController.text),
                       information: _informationController.text,
                     );
+
                     eventService.updateEvent(updatedEvent).then((_) {
                       widget.onEventUpdated();
+                      // ignore: use_build_context_synchronously
                       Navigator.pop(context);
                     });
                   }

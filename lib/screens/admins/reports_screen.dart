@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/mc_model.dart';
 import '../../models/weekly_report_model.dart';
+import '../../services/missional_community_service.dart';
 import 'report_detail_screen.dart';
 
 class ReportsScreen extends StatefulWidget {
@@ -35,11 +36,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
     });
 
     try {
-      final mcsList = await McServices.getMicroCommunities();
+      final mcsList = await MissionalCommunityService.getAllMCs();
       await _loadReports();
 
       setState(() {
-        mcs = mcsList;
+        mcs = mcsList.cast<MissionalCommunity>();
         isLoading = false;
       });
     } catch (e) {
@@ -152,7 +153,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                 vertical: 8,
                               ),
                               child: ListTile(
-                                title: Text(report.mcName ?? 'Unknown MC'),
+                                title: Text(report.mcName),
                                 subtitle: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [

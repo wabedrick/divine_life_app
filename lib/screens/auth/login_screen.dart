@@ -40,27 +40,30 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text,
       );
 
-      // Navigate to appropriate screen based on role
       if (!mounted) return;
-      if (result['role'] == 'super admin') {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => SuperAdminDashboard()),
-        );
-      } else if (result['role'] == 'admin') {
-        // Handle admin role
-      } else if (result['role'] == 'mc leader') {
-        // Handle mc leader role
+      if (result['status'] == 'success') {
+        // Navigate to appropriate screen based on role
+        if (result['role'] == 'super admin') {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => SuperAdminDashboard()),
+          );
+        } else if (result['role'] == 'admin') {
+          // Handle admin role
+        } else if (result['role'] == 'mc leader') {
+          // Handle mc leader role
+        } else {
+          // Handle other roles
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => DashboardScreen(user: null), // You can fetch user from shared_preferences if needed
+            ),
+          );
+        }
       } else {
-        // Handle other roles
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => DashboardScreen(user: result['user']),
-          ),
-        );
-        // setState(() {
-        //   _errorMessage = 'You do not have super admin privileges';
-        //   _isLoading = false;
-        // });
+        setState(() {
+          _errorMessage = result['message'] ?? 'Login failed';
+          _isLoading = false;
+        });
       }
     } catch (e) {
       setState(() {
