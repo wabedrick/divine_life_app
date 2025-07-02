@@ -14,6 +14,8 @@ import '../utils/validators.dart' as validators;
 import '../utils/constants.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/loading_overlay.dart';
+import '../utils/app_colors.dart';
+import 'admins/mc_leader_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -86,17 +88,18 @@ class _LoginScreenState extends State<LoginScreen> {
             context,
           ).showSnackBar(SnackBar(content: Text(data['message'])));
 
-          if (data['role'] == 'super admin') {
+          if ((data['role']?.toLowerCase() ?? '') == 'super admin') {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(builder: (_) => SuperAdminDashboard()),
             );
-          } else if (data['role'] == 'admin') {
-            // Handle admin role
+          } else if ((data['role']?.toLowerCase() ?? '') == 'admin') {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(builder: (_) => AdminDashboard()),
             );
-          } else if (data['role'] == 'mc leader') {
-            // Handle mc leader role
+          } else if ((data['role']?.toLowerCase() ?? '') == 'mc_leader' || (data['role']?.toLowerCase() ?? '') == 'mc leader') {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => MCLeaderDashboard()),
+            );
           } else {
             // Handle other roles
             Navigator.pushReplacement(
@@ -105,11 +108,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 builder:
                     (context) => DashboardScreen(
                       user: User(
+                        id: '', // Provide a placeholder or actual id if available
                         username: username,
                         email: email,
                         role: '',
-                        password: '',
-                        mc: '',
+                        userPassword: '',
+                        missionalCommunity: '',
                       ),
                     ),
               ),
@@ -225,8 +229,8 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
           elevation: 0,
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.accent,
         ),
         body: SafeArea(
           child: Center(
@@ -239,15 +243,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // App Logo or Church Logo
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: 32.0),
-                      child: CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.blue,
-                        child: Icon(
-                          Icons.church,
-                          size: 60,
-                          color: Colors.white,
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 32.0),
+                      child: Center(
+                        child: Image.asset(
+                          'assets/dlmi-logo.png',
+                          height: 140,
+                          width: 140,
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ),
@@ -257,11 +260,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _usernameController,
                       decoration: const InputDecoration(
                         labelText: 'Username',
-                        prefixIcon: Icon(Icons.person),
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.blue, width: 2),
-                        ),
+                        prefixIcon: Icon(Icons.person, color: Colors.white),
+                        border: OutlineInputBorder(),
+                        labelStyle: TextStyle(color: Colors.white),
+                        hintStyle: TextStyle(color: Colors.white70),
                       ),
+                      style: TextStyle(color: Colors.white),
                       textInputAction: TextInputAction.next,
                       validator: (value) => Validators.validateUsername(value),
                       autocorrect: false,
@@ -273,12 +277,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _passwordController,
                       decoration: InputDecoration(
                         labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock),
+                        prefixIcon: const Icon(Icons.lock, color: Colors.white),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePassword
                                 ? Icons.visibility
                                 : Icons.visibility_off,
+                            color: AppColors.primary,
                           ),
                           onPressed: () {
                             setState(() {
@@ -287,7 +292,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                         ),
                         border: const OutlineInputBorder(),
+                        labelStyle: TextStyle(color: Colors.white),
+                        hintStyle: TextStyle(color: Colors.white70),
                       ),
+                      style: TextStyle(color: Colors.white),
                       obscureText: _obscurePassword,
                       validator: (value) => Validators.validatePassword(value),
                       textInputAction: TextInputAction.done,
@@ -302,28 +310,28 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: _showForgotPasswordDialog,
                         child: Text(
                           'Forgot Password?',
-                          style: TextStyle(color: Colors.blue),
+                          style: TextStyle(color: AppColors.primary),
                         ),
                       ),
                     ),
                     const SizedBox(height: 24),
 
                     // Login Button
-                    CustomButton(onPressed: _login, text: 'LOGIN'),
+                    CustomButton(onPressed: _login, text: 'LOGIN', color: AppColors.accent, textColor: AppColors.primary),
                     const SizedBox(height: 24),
 
                     // Register Link
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text('Don\'t have an account?'),
+                        const Text('Don\'t have an account?', style: TextStyle(color: Colors.white)),
                         TextButton(
                           onPressed: _navigateToRegisterScreen,
                           child: Text(
                             'Register',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Colors.blue,
+                              color: AppColors.primary,
                             ),
                           ),
                         ),

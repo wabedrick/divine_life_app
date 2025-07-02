@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:email_validator/email_validator.dart' as ev;
+import 'package:divine_life_app/utils/app_colors.dart';
 
 import 'login_screen.dart';
 
@@ -176,9 +177,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Register'),
-          elevation: 2,
-          backgroundColor: Colors.blue,
+          title: Text('Register'),
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.accent,
         ),
         body: SafeArea(
           child: SingleChildScrollView(
@@ -191,12 +192,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   // Email Field with improved validation
                   TextFormField(
                     controller: _emailController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Email',
-                      prefixIcon: Icon(Icons.email),
+                      prefixIcon: Icon(Icons.email, color: Colors.white),
                       border: OutlineInputBorder(),
-                      hintText: 'example@email.com',
+                      labelStyle: TextStyle(color: Colors.white),
+                      hintStyle: TextStyle(color: Colors.white70),
                     ),
+                    style: TextStyle(color: Colors.white),
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
                     validator: (value) {
@@ -214,11 +217,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   // Username Field
                   TextFormField(
                     controller: _usernameController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Username',
-                      prefixIcon: Icon(Icons.person),
+                      prefixIcon: Icon(Icons.person, color: Colors.white),
                       border: OutlineInputBorder(),
+                      labelStyle: TextStyle(color: Colors.white),
+                      hintStyle: TextStyle(color: Colors.white70),
                     ),
+                    style: TextStyle(color: Colors.white),
                     textInputAction: TextInputAction.next,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
@@ -250,21 +256,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _passwordController,
                     decoration: InputDecoration(
                       labelText: 'Password',
-                      prefixIcon: const Icon(Icons.lock),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
-                      ),
-                      border: const OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.lock, color: Colors.white),
+                      border: OutlineInputBorder(),
+                      labelStyle: TextStyle(color: Colors.white),
+                      hintStyle: TextStyle(color: Colors.white70),
                     ),
+                    style: TextStyle(color: Colors.white),
                     obscureText: _obscurePassword,
                     textInputAction: TextInputAction.next,
                     validator: (value) {
@@ -321,7 +318,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _register,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: AppColors.accent,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
@@ -336,7 +333,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 'Register',
                                 style: TextStyle(
                                   fontSize: 18,
-                                  color: Colors.white,
+                                  color: AppColors.primary,
                                 ),
                               ),
                     ),
@@ -347,14 +344,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text('Already have an account?'),
+                      const Text('Already have an account?', style: TextStyle(color: Colors.white)),
                       TextButton(
                         onPressed: () {
                           Navigator.of(context).pop();
                         },
                         child: const Text(
                           'Login',
-                          style: TextStyle(color: Colors.blue),
+                          style: TextStyle(color: AppColors.primary),
                         ),
                       ),
                     ],

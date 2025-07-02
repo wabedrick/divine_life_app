@@ -49,8 +49,9 @@ class AuthService {
           username: data['username'] ?? '',
           email: data['email'] ?? '',
           role: data['role'] ?? '',
-          password: '',
-          mc: data['mc_id']?.toString() ?? '',
+          userPassword: '',
+          missionalCommunity: data['mc_id']?.toString() ?? '',
+          id: data['id']?.toString() ?? '',
         );
       } else {
         throw AuthException(data['message'] ?? 'Login failed');

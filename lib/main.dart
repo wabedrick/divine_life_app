@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/register_screen.dart';
 import 'screens/login_screen.dart';
+import 'utils/app_colors.dart';
 
 // import 'screens/auth/login_screen.dart';
 
@@ -18,8 +19,51 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Church App',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: Colors.white,
+        primaryColor: AppColors.primary,
+        scaffoldBackgroundColor: AppColors.dark,
+        colorScheme: ColorScheme.fromSwatch().copyWith(
+          primary: AppColors.primary,
+          secondary: AppColors.accent,
+          background: AppColors.dark,
+          surface: AppColors.secondary,
+          onPrimary: AppColors.accent,
+          onSecondary: AppColors.primary,
+          brightness: Brightness.light,
+        ),
+        appBarTheme: AppBarTheme(
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.accent,
+          iconTheme: IconThemeData(color: AppColors.accent),
+          titleTextStyle: TextStyle(
+            color: AppColors.accent,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.accent,
+            foregroundColor: AppColors.primary,
+            textStyle: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          border: OutlineInputBorder(
+            borderSide: BorderSide(color: AppColors.primary),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: AppColors.primary, width: 2),
+          ),
+          labelStyle: TextStyle(color: AppColors.primary),
+          prefixIconColor: AppColors.primary,
+        ),
+        textTheme: TextTheme(
+          headlineSmall: TextStyle(
+            color: AppColors.primary,
+            fontWeight: FontWeight.bold,
+          ),
+          bodyMedium: TextStyle(color: AppColors.dark),
+        ),
       ),
       debugShowCheckedModeBanner: false,
       home: WelcomeScreen(),

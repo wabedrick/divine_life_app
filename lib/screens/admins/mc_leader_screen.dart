@@ -11,6 +11,7 @@ import 'mcs/add_edit_member_screen.dart';
 import './mcs/weekly_reports_screen.dart';
 import './mcs/submit_report_screen.dart';
 import 'report_detail_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MCLeaderDashboard extends StatefulWidget {
   const MCLeaderDashboard({super.key});
@@ -59,10 +60,13 @@ class _MCLeaderDashboardState extends State<MCLeaderDashboard> {
     });
 
     try {
-      // Load recent members, reports and stats
-      final membersResponse = await McMemberServices.getMembers();
-      final reportsResponse = await McServices.getLeaderReports();
-      final statsResponse = await McServices.getMCStats();
+      // Retrieve MC name from shared preferences
+      final prefs = await SharedPreferences.getInstance();
+      final mcName = prefs.getString('mc') ?? '';
+      // Load recent members, reports and stats for this MC
+      final membersResponse = await McMemberServices.getMembers(mcName: mcName);
+      final reportsResponse = await McServices.fetchAllReports(mcName: mcName);
+      final statsResponse = await McServices.getMCStats(mcName: mcName);
 
       setState(() {
         recentMembers = membersResponse;
@@ -388,9 +392,9 @@ class _MCLeaderDashboardState extends State<MCLeaderDashboard> {
               .map(
                 (report) => ListTile(
                   title: Text(
-                    'Week of ${DateFormat('MMM d, yyyy').format(report.weekStarting)}',
+                    'Week of [32m[1m[4m${DateFormat('MMM d, yyyy').format(DateTime.parse(report.meetingDate))}[0m',
                   ),
-                  subtitle: Text('${report.attendees} attendees'),
+                  subtitle: Text('${report.attendance} attendance'),
                   trailing: Icon(Icons.chevron_right),
                   onTap: () {
                     Navigator.push(

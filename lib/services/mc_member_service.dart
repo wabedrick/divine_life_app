@@ -4,16 +4,15 @@ import 'package:http/http.dart' as http;
 import '../models/mc_member_model.dart';
 
 class McMemberServices {
-  static const String baseUrl = 'https://your-server.com/api/mc_members.php';
+  static const String baseUrl = 'https://divinelifeministriesinternational.org/mcMembers/mc_members.php';
 
   // Get all members
-  static Future<List<MCMember>> getMembers({bool? activeOnly}) async {
+  static Future<List<MCMember>> getMembers({bool? activeOnly, String? mcName}) async {
     try {
-      final response = await http.get(
-        Uri.parse(
-          '$baseUrl?action=get_members${activeOnly == true ? '&active=1' : ''}',
-        ),
-      );
+      String url = '$baseUrl?action=get_members';
+      if (activeOnly == true) url += '&active=1';
+      if (mcName != null && mcName.isNotEmpty) url += '&mcName=${Uri.encodeComponent(mcName)}';
+      final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as List;
@@ -43,7 +42,7 @@ class McMemberServices {
   static Future<String> addMember(MCMember member) async {
     final response = await http.post(
       Uri.parse(baseUrl),
-      body: {'action': 'add_member', ...member.toMap()},
+      body: {'action': 'add_member', ...member.toMap(), 'mcName': member.mcName},
     );
 
     if (response.statusCode == 200) {
@@ -58,7 +57,7 @@ class McMemberServices {
   static Future<void> updateMember(MCMember member) async {
     final response = await http.post(
       Uri.parse(baseUrl),
-      body: {'action': 'update_member', 'id': member.id, ...member.toMap()},
+      body: {'action': 'update_member', 'id': member.id, ...member.toMap(), 'mcName': member.mcName},
     );
 
     if (response.statusCode != 200) {

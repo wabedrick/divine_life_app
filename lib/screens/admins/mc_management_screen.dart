@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/mc_model.dart';
 import '../../services/missional_community_service.dart';
 import 'mc_form_screen.dart';
+import '../../utils/app_colors.dart';
 
 class MCManagementScreen extends StatefulWidget {
   const MCManagementScreen({super.key});
@@ -130,6 +131,7 @@ class _MCManagementScreenState extends State<MCManagementScreen> {
         centerTitle: true,
         backgroundColor: Colors.blue,
       ),
+      backgroundColor: AppColors.dark,
       body: Column(
         children: [
           Padding(
@@ -138,11 +140,13 @@ class _MCManagementScreenState extends State<MCManagementScreen> {
               controller: searchController,
               decoration: InputDecoration(
                 hintText: 'Search by name, location, or leader',
-                prefixIcon: Icon(Icons.search),
+                hintStyle: TextStyle(color: Colors.white70),
+                prefixIcon: Icon(Icons.search, color: Colors.white),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(26.0),
                 ),
               ),
+              style: TextStyle(color: Colors.white),
             ),
           ),
           Expanded(

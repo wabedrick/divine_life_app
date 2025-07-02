@@ -7,6 +7,9 @@ class MCMember {
   final bool isActive;
   final DateTime joinDate;
   final String gender;
+  final String mcName;
+  final String dob; // MM-dd
+  final bool dlmMember;
 
   MCMember({
     required this.id,
@@ -16,6 +19,9 @@ class MCMember {
     required this.isActive,
     required this.joinDate,
     required this.gender,
+    required this.mcName,
+    required this.dob,
+    required this.dlmMember,
   });
 
   factory MCMember.fromMap(Map<String, dynamic> map) {
@@ -27,6 +33,9 @@ class MCMember {
       isActive: map['isActive'].toString() == '1',
       joinDate: DateTime.parse(map['joinDate']),
       gender: map['gender'] ?? 'Other',
+      mcName: map['mcName'] ?? '',
+      dob: map['dob'] ?? '',
+      dlmMember: map['dlm_member'].toString() == '1',
     );
   }
 
@@ -39,6 +48,9 @@ class MCMember {
       'isActive': isActive ? '1' : '0',
       'joinDate': joinDate.toIso8601String(),
       'gender': gender,
+      'mcName': mcName,
+      'dob': dob,
+      'dlm_member': dlmMember ? '1' : '0',
     };
   }
 }

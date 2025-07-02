@@ -199,4 +199,73 @@ class ApiService {
       throw Exception('Failed to delete Admin');
     }
   }
+
+  static Future<List<User>> getUsers() async {
+    final headers = await _getHeaders();
+    final response = await http.get(
+      Uri.parse('${baseUrl}get_users.php'),
+      headers: headers,
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => User.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load users: \\${response.body}');
+    }
+  }
+
+  static Future<void> promoteToMCLeader(String userId) async {
+    final response = await http.post(
+      Uri.parse('${baseUrl}update_user_role.php'),
+      body: {'id': userId, 'role': 'mc_leader'},
+    );
+    final data = json.decode(response.body);
+    if (data['success'] != true) {
+      throw Exception(data['message'] ?? 'Failed to promote user');
+    }
+  }
+
+  static Future<void> addUser(User user) async {
+    final response = await http.post(
+      Uri.parse('${baseUrl}add_user.php'),
+      body: user.toJson(),
+    );
+    final data = json.decode(response.body);
+    if (data['success'] != true) {
+      throw Exception(data['message'] ?? 'Failed to add user');
+    }
+  }
+
+  static Future<void> updateUser(User user) async {
+    final response = await http.post(
+      Uri.parse('${baseUrl}update_user.php'),
+      body: user.toJson(),
+    );
+    final data = json.decode(response.body);
+    if (data['success'] != true) {
+      throw Exception(data['message'] ?? 'Failed to update user');
+    }
+  }
+
+  static Future<void> deleteUser(String userId) async {
+    final response = await http.post(
+      Uri.parse('${baseUrl}delete_user.php'),
+      body: {'id': userId},
+    );
+    final data = json.decode(response.body);
+    if (data['success'] != true) {
+      throw Exception(data['message'] ?? 'Failed to delete user');
+    }
+  }
+
+  static Future<void> demoteToMember(String userId) async {
+    final response = await http.post(
+      Uri.parse('${baseUrl}update_user_role.php'),
+      body: {'id': userId, 'role': 'member'},
+    );
+    final data = json.decode(response.body);
+    if (data['success'] != true) {
+      throw Exception(data['message'] ?? 'Failed to demote user');
+    }
+  }
 }

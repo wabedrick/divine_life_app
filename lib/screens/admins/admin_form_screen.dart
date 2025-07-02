@@ -255,8 +255,11 @@ class _AdminFormScreenState extends State<AdminFormScreen> {
                 decoration: InputDecoration(
                   labelText: 'Username',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
+                  prefixIcon: Icon(Icons.person, color: Colors.white),
+                  labelStyle: TextStyle(color: Colors.white),
+                  hintStyle: TextStyle(color: Colors.white70),
                 ),
+                style: TextStyle(color: Colors.white),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Please enter a valid username';
@@ -270,9 +273,12 @@ class _AdminFormScreenState extends State<AdminFormScreen> {
                 decoration: InputDecoration(
                   labelText: 'Email',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
+                  prefixIcon: Icon(Icons.email, color: Colors.white),
+                  labelStyle: TextStyle(color: Colors.white),
+                  hintStyle: TextStyle(color: Colors.white70),
                 ),
                 keyboardType: TextInputType.emailAddress,
+                style: TextStyle(color: Colors.white),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Please enter an email';
@@ -290,9 +296,12 @@ class _AdminFormScreenState extends State<AdminFormScreen> {
                   labelText:
                       _isEditing ? 'New Password (optional)' : 'Password',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
+                  prefixIcon: Icon(Icons.lock, color: Colors.white),
+                  labelStyle: TextStyle(color: Colors.white),
+                  hintStyle: TextStyle(color: Colors.white70),
                 ),
                 obscureText: true,
+                style: TextStyle(color: Colors.white),
                 validator: (value) {
                   if (!_isEditing && (value == null || value.isEmpty)) {
                     return 'Please enter a password';
@@ -309,8 +318,11 @@ class _AdminFormScreenState extends State<AdminFormScreen> {
                 decoration: InputDecoration(
                   labelText: 'MC Name',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.badge),
+                  prefixIcon: Icon(Icons.badge, color: Colors.white),
+                  labelStyle: TextStyle(color: Colors.white),
+                  hintStyle: TextStyle(color: Colors.white70),
                 ),
+                style: TextStyle(color: Colors.white),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Please enter your MC Name';
@@ -323,7 +335,9 @@ class _AdminFormScreenState extends State<AdminFormScreen> {
                 decoration: InputDecoration(
                   labelText: 'Role',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.admin_panel_settings),
+                  prefixIcon: Icon(Icons.admin_panel_settings, color: Colors.white),
+                  labelStyle: TextStyle(color: Colors.white),
+                  hintStyle: TextStyle(color: Colors.white70),
                 ),
                 value: _selectedRole,
                 items: [

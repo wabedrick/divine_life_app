@@ -19,10 +19,12 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _dobController = TextEditingController();
   bool _isNewMember = false;
   bool _isActive = true;
   bool _isLoading = false;
   String? _selectedGender;
+  bool _dlmMember = false;
   final List<String> _genderOptions = ['Male', 'Female', 'Prefer not to say'];
 
   @override
@@ -35,6 +37,8 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
       _emailController.text = widget.member!.email ?? '';
       _isActive = widget.member!.isActive;
       _selectedGender = widget.member!.gender;
+      _dobController.text = widget.member!.dob;
+      _dlmMember = widget.member!.dlmMember;
     }
   }
 
@@ -51,8 +55,10 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
         email: _emailController.text.trim(),
         isActive: _isActive,
         gender: _selectedGender ?? 'Other',
-
         joinDate: widget.member?.joinDate ?? DateTime.now(),
+        mcName: widget.member?.mcName ?? '', // TODO: Replace with actual MC name if available
+        dob: _dobController.text.trim(),
+        dlmMember: _dlmMember,
       );
 
       try {
@@ -129,8 +135,11 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
                         decoration: InputDecoration(
                           labelText: 'Full Name *',
                           border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.person),
+                          prefixIcon: Icon(Icons.person, color: Colors.white),
+                          labelStyle: TextStyle(color: Colors.white),
+                          hintStyle: TextStyle(color: Colors.white70),
                         ),
+                        style: TextStyle(color: Colors.white),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return 'Please enter member name';
@@ -144,9 +153,12 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
                         decoration: InputDecoration(
                           labelText: 'Phone Number',
                           border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.phone),
+                          prefixIcon: Icon(Icons.phone, color: Colors.white),
+                          labelStyle: TextStyle(color: Colors.white),
+                          hintStyle: TextStyle(color: Colors.white70),
                         ),
                         keyboardType: TextInputType.phone,
+                        style: TextStyle(color: Colors.white),
                       ),
                       SizedBox(height: 16),
                       TextFormField(
@@ -154,9 +166,12 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
                         decoration: InputDecoration(
                           labelText: 'Email Address',
                           border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.email),
+                          prefixIcon: Icon(Icons.email, color: Colors.white),
+                          labelStyle: TextStyle(color: Colors.white),
+                          hintStyle: TextStyle(color: Colors.white70),
                         ),
                         keyboardType: TextInputType.emailAddress,
+                        style: TextStyle(color: Colors.white),
                         validator: (value) {
                           if (value != null && value.isNotEmpty) {
                             // Simple email validation
@@ -173,14 +188,16 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
                         decoration: InputDecoration(
                           labelText: 'Gender',
                           border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.people),
+                          prefixIcon: Icon(Icons.people, color: Colors.white),
+                          labelStyle: TextStyle(color: Colors.white),
+                          hintStyle: TextStyle(color: Colors.white70),
                         ),
                         items:
                             _genderOptions
                                 .map(
                                   (gender) => DropdownMenuItem(
                                     value: gender,
-                                    child: Text(gender),
+                                    child: Text(gender, style: TextStyle(color: Colors.white)),
                                   ),
                                 )
                                 .toList(),
@@ -189,6 +206,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
                             _selectedGender = value;
                           });
                         },
+                        style: TextStyle(color: Colors.white),
                       ),
                       SizedBox(height: 16),
                       TextFormField(
@@ -196,9 +214,12 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
                         decoration: InputDecoration(
                           labelText: 'Address',
                           border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.location_on),
+                          prefixIcon: Icon(Icons.location_on, color: Colors.white),
+                          labelStyle: TextStyle(color: Colors.white),
+                          hintStyle: TextStyle(color: Colors.white70),
                         ),
                         maxLines: 2,
+                        style: TextStyle(color: Colors.white),
                       ),
                       SizedBox(height: 16),
                       TextFormField(
@@ -206,15 +227,66 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
                         decoration: InputDecoration(
                           labelText: 'Notes',
                           border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.note),
+                          prefixIcon: Icon(Icons.note, color: Colors.white),
+                          labelStyle: TextStyle(color: Colors.white),
+                          hintStyle: TextStyle(color: Colors.white70),
                         ),
                         maxLines: 3,
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: _dobController,
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          labelText: 'Date of Birth (MM-DD)',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.cake, color: Colors.white),
+                          labelStyle: TextStyle(color: Colors.white),
+                          hintStyle: TextStyle(color: Colors.white70),
+                        ),
+                        style: TextStyle(color: Colors.white),
+                        onTap: () async {
+                          final now = DateTime.now();
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime(now.year, 1, 1),
+                            firstDate: DateTime(now.year, 1, 1),
+                            lastDate: DateTime(now.year, 12, 31),
+                            helpText: 'Select Birthday (Month and Day only)',
+                            fieldLabelText: 'Birthday',
+                            fieldHintText: 'MM-DD',
+                            initialEntryMode: DatePickerEntryMode.calendar,
+                          );
+                          if (picked != null) {
+                            _dobController.text = '${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+                          }
+                        },
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please select date of birth';
+                          }
+                          return null;
+                        },
                       ),
                       SizedBox(height: 16),
                       SwitchListTile(
-                        title: Text('New Member'),
+                        title: Text('DLM Member', style: TextStyle(color: Colors.white)),
+                        subtitle: Text('Is this person a member of Divine Life Ministries?', style: TextStyle(color: Colors.white70)),
+                        value: _dlmMember,
+                        onChanged: (val) {
+                          setState(() {
+                            _dlmMember = val;
+                          });
+                        },
+                        activeColor: Colors.green,
+                      ),
+                      SizedBox(height: 16),
+                      SwitchListTile(
+                        title: Text('New Member', style: TextStyle(color: Colors.white)),
                         subtitle: Text(
                           'Mark if this person is a new addition to the group',
+                          style: TextStyle(color: Colors.white70),
                         ),
                         value: _isNewMember,
                         activeColor: Colors.green,
@@ -225,9 +297,10 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
                         },
                       ),
                       SwitchListTile(
-                        title: Text('Active Member'),
+                        title: Text('Active Member', style: TextStyle(color: Colors.white)),
                         subtitle: Text(
                           'Member is currently active in the ministry',
+                          style: TextStyle(color: Colors.white70),
                         ),
                         value: _isActive,
                         activeColor: Colors.green,
@@ -262,16 +335,17 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: Text('Delete Member'),
+            title: Text('Delete Member', style: TextStyle(color: Colors.white)),
             content: Text(
               'Are you sure you want to delete ${widget.member!.name}? This action cannot be undone.',
+              style: TextStyle(color: Colors.white70),
             ),
             actions: [
               TextButton(
                 onPressed: () {
                   Navigator.of(ctx).pop();
                 },
-                child: Text('Cancel'),
+                child: Text('Cancel', style: TextStyle(color: Colors.white)),
               ),
               TextButton(
                 onPressed: () async {
@@ -285,7 +359,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
                     Navigator.of(context).pop(); // Return to previous screen
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Member deleted successfully'),
+                        content: Text('Member deleted successfully', style: TextStyle(color: Colors.white)),
                         backgroundColor: Colors.green,
                       ),
                     );
@@ -296,14 +370,14 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Error deleting member: ${e.toString()}'),
+                        content: Text('Error deleting member: ${e.toString()}', style: TextStyle(color: Colors.white)),
                         backgroundColor: Colors.red,
                       ),
                     );
                   }
                 },
                 style: TextButton.styleFrom(foregroundColor: Colors.red),
-                child: Text('Delete'),
+                child: Text('Delete', style: TextStyle(color: Colors.red)),
               ),
             ],
           ),
@@ -317,6 +391,7 @@ class _AddEditMemberScreenState extends State<AddEditMemberScreen> {
     _emailController.dispose();
     _addressController.dispose();
     _notesController.dispose();
+    _dobController.dispose();
     super.dispose();
   }
 }

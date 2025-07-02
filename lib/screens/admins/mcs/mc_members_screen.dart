@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../models/mc_member_model.dart';
 import '../../../services/mc_member_service.dart';
 import 'add_edit_member_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MCMembersScreen extends StatefulWidget {
   const MCMembersScreen({super.key});
@@ -29,7 +30,10 @@ class _MCMembersScreenState extends State<MCMembersScreen> {
     });
 
     try {
-      final membersResponse = await McMemberServices.getMembers();
+      // Retrieve MC name from shared preferences
+      final prefs = await SharedPreferences.getInstance();
+      final mcName = prefs.getString('mc') ?? '';
+      final membersResponse = await McMemberServices.getMembers(mcName: mcName);
       setState(() {
         members = membersResponse;
         isLoading = false;

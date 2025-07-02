@@ -168,7 +168,13 @@ class _AddEventScreenState extends State<AddEventScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: InputDecoration(labelText: 'Event Name'),
+                decoration: InputDecoration(
+                  labelText: 'Event Name',
+                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(color: Colors.white),
+                  hintStyle: TextStyle(color: Colors.white70),
+                ),
+                style: TextStyle(color: Colors.white),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter the event name';
@@ -180,7 +186,11 @@ class _AddEventScreenState extends State<AddEventScreen> {
                 controller: _dateController,
                 decoration: InputDecoration(
                   labelText: 'Event Date (YYYY-MM-DD)',
+                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(color: Colors.white),
+                  hintStyle: TextStyle(color: Colors.white70),
                 ),
+                style: TextStyle(color: Colors.white),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter the event date';
@@ -190,7 +200,13 @@ class _AddEventScreenState extends State<AddEventScreen> {
               ),
               TextFormField(
                 controller: _informationController,
-                decoration: InputDecoration(labelText: 'Information'),
+                decoration: InputDecoration(
+                  labelText: 'Information',
+                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(color: Colors.white),
+                  hintStyle: TextStyle(color: Colors.white70),
+                ),
+                style: TextStyle(color: Colors.white),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter some information';
@@ -271,7 +287,13 @@ class _EditEventScreenState extends State<EditEventScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: InputDecoration(labelText: 'Event Name'),
+                decoration: InputDecoration(
+                  labelText: 'Event Name',
+                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(color: Colors.white),
+                  hintStyle: TextStyle(color: Colors.white70),
+                ),
+                style: TextStyle(color: Colors.white),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter the event name';
@@ -283,7 +305,11 @@ class _EditEventScreenState extends State<EditEventScreen> {
                 controller: _dateController,
                 decoration: InputDecoration(
                   labelText: 'Event Date (YYYY-MM-DD)',
+                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(color: Colors.white),
+                  hintStyle: TextStyle(color: Colors.white70),
                 ),
+                style: TextStyle(color: Colors.white),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter the event date';
@@ -293,7 +319,13 @@ class _EditEventScreenState extends State<EditEventScreen> {
               ),
               TextFormField(
                 controller: _informationController,
-                decoration: InputDecoration(labelText: 'Information'),
+                decoration: InputDecoration(
+                  labelText: 'Information',
+                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(color: Colors.white),
+                  hintStyle: TextStyle(color: Colors.white70),
+                ),
+                style: TextStyle(color: Colors.white),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter some information';

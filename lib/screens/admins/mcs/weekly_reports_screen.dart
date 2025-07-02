@@ -4,6 +4,7 @@ import '../../../models/weekly_report_model.dart';
 import '../../../services/mc_services.dart';
 import 'report_detail_screen.dart';
 import 'submit_report_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class WeeklyReportsScreen extends StatefulWidget {
   const WeeklyReportsScreen({super.key});
@@ -32,7 +33,10 @@ class _WeeklyReportsScreenState extends State<WeeklyReportsScreen> {
     });
 
     try {
-      final reportsResponse = await McServices.getLeaderReports();
+      // Retrieve MC name from shared preferences
+      final prefs = await SharedPreferences.getInstance();
+      final mcName = prefs.getString('mc') ?? '';
+      final reportsResponse = await McServices.fetchAllReports(mcName: mcName);
       setState(() {
         reports = reportsResponse;
         isLoading = false;
@@ -53,19 +57,14 @@ class _WeeklyReportsScreenState extends State<WeeklyReportsScreen> {
   List<WeeklyReport> get filteredReports {
     return reports.where((report) {
       bool passesDateFilter = true;
-
       if (startDate != null) {
-        passesDateFilter =
-            report.weekStarting.isAfter(startDate!) ||
-            report.weekStarting.isAtSameMomentAs(startDate!);
+        passesDateFilter = DateTime.parse(report.meetingDate).isAfter(startDate!) ||
+            DateTime.parse(report.meetingDate).isAtSameMomentAs(startDate!);
       }
-
       if (passesDateFilter && endDate != null) {
-        passesDateFilter =
-            report.weekStarting.isBefore(endDate!) ||
-            report.weekStarting.isAtSameMomentAs(endDate!);
+        passesDateFilter = DateTime.parse(report.meetingDate).isBefore(endDate!) ||
+            DateTime.parse(report.meetingDate).isAtSameMomentAs(endDate!);
       }
-
       return passesDateFilter;
     }).toList();
   }
@@ -105,54 +104,6 @@ class _WeeklyReportsScreenState extends State<WeeklyReportsScreen> {
       startDate = null;
       endDate = null;
     });
-  }
-
-  void _deleteReport(WeeklyReport report) async {
-    final bool confirm =
-        await showDialog(
-          context: context,
-          builder:
-              (context) => AlertDialog(
-                title: Text('Delete Report'),
-                content: Text(
-                  'Are you sure you want to delete this report? This action cannot be undone.',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: Text('Cancel'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    style: TextButton.styleFrom(foregroundColor: Colors.red),
-                    child: Text('Delete'),
-                  ),
-                ],
-              ),
-        ) ??
-        false;
-
-    if (confirm) {
-      try {
-        await McServices.deleteReport(report.id);
-        _loadReports();
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Report deleted successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } catch (e) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error deleting report: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
   }
 
   @override
@@ -247,10 +198,10 @@ class _WeeklyReportsScreenState extends State<WeeklyReportsScreen> {
                           ),
                           child: ListTile(
                             title: Text(
-                              'Week of ${DateFormat('MMM d, yyyy').format(report.weekStarting)}',
+                              'Week of ${DateFormat('MMM d, yyyy').format(DateTime.parse(report.meetingDate))}',
                             ),
                             subtitle: Text(
-                              '${report.attendees} attendees, ${report.newMembers} new members',
+                              '${report.attendance} attendance, ${report.newMember} new members',
                             ),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -268,10 +219,6 @@ class _WeeklyReportsScreenState extends State<WeeklyReportsScreen> {
                                       ),
                                     ).then((_) => _loadReports());
                                   },
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.delete, color: Colors.red),
-                                  onPressed: () => _deleteReport(report),
                                 ),
                               ],
                             ),

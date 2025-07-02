@@ -56,33 +56,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   Future<void> _loadReports() async {
     try {
-      // Prepare filter parameters
-      Map<String, dynamic> filters = {};
-
-      if (_startDate != null) {
-        filters['start_date'] = DateFormat('yyyy-MM-dd').format(_startDate!);
-      }
-
-      if (_endDate != null) {
-        filters['end_date'] = DateFormat('yyyy-MM-dd').format(_endDate!);
-      }
-
-      if (_selectedMcId != null) {
-        filters['mc_id'] = _selectedMcId;
-      }
-
-      final reportsList = await McServices.getWeeklyReports(
-        mcId: _selectedMcId,
-        startDate:
-            _startDate != null
-                ? DateFormat('yyyy-MM-dd').format(_startDate!)
-                : null,
-        endDate:
-            _endDate != null
-                ? DateFormat('yyyy-MM-dd').format(_endDate!)
-                : null,
-      );
-
+      final reportsList = await McServices.fetchAllReports();
       setState(() {
         reports = reportsList;
       });
@@ -152,33 +126,64 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                 horizontal: 16,
                                 vertical: 8,
                               ),
-                              child: ListTile(
-                                title: Text(report.mcName),
-                                subtitle: Column(
+                              elevation: 3,
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    SizedBox(height: 4),
                                     Text(
-                                      'Week of ${DateFormat('MMM d, yyyy').format(report.weekStarting)}',
+                                      report.mcName,
+                                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                                     ),
                                     SizedBox(height: 4),
-                                    Text(
-                                      'Attendees: ${report.attendees} (${report.newMembers} new)',
+                                    Row(
+                                      children: [
+                                        Icon(Icons.calendar_today, size: 16, color: Colors.blueGrey),
+                                        SizedBox(width: 4),
+                                        Text('Meeting Date: ${report.meetingDate}'),
+                                      ],
                                     ),
+                                    SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.person, size: 16, color: Colors.blueGrey),
+                                        SizedBox(width: 4),
+                                        Text('Leader: ${report.leaderName}'),
+                                      ],
+                                    ),
+                                    SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.people, size: 16, color: Colors.blueGrey),
+                                        SizedBox(width: 4),
+                                        Text('Attendance: ${report.attendance}'),
+                                        SizedBox(width: 16),
+                                        Icon(Icons.person_add, size: 16, color: Colors.green),
+                                        SizedBox(width: 4),
+                                        Text('New Members: ${report.newMember}'),
+                                      ],
+                                    ),
+                                    SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.check_circle, size: 16, color: Colors.blueGrey),
+                                        SizedBox(width: 4),
+                                        Text('Meet Up: ${report.meetUp}'),
+                                        SizedBox(width: 16),
+                                        Icon(Icons.attach_money, size: 16, color: Colors.amber),
+                                        SizedBox(width: 4),
+                                        Text('Giving: \$${report.giving.toStringAsFixed(2)}'),
+                                      ],
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      'Comment:',
+                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                    Text(report.comment),
                                   ],
                                 ),
-                                trailing: Icon(Icons.chevron_right),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (context) => ReportDetailScreen(
-                                            report: report,
-                                          ),
-                                    ),
-                                  );
-                                },
                               ),
                             );
                           },

@@ -5,6 +5,7 @@ import 'login_screen.dart';
 import 'chat_screen.dart';
 import 'mcs_screen.dart';
 import 'user_event_screen.dart';
+import '../utils/app_colors.dart';
 
 class DashboardScreen extends StatelessWidget {
   final User user;
@@ -37,8 +38,8 @@ class DashboardScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Divine Life Ministries'),
-        backgroundColor: Colors.blue.shade800,
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.accent,
         // The actions property is used to add buttons to the app bar
         // actions: [
         //   IconButton(
@@ -60,34 +61,27 @@ class DashboardScreen extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           UserAccountsDrawerHeader(
-            decoration: BoxDecoration(color: Colors.blue.shade800),
+            decoration: BoxDecoration(color: AppColors.primary),
             accountName: Text(
               user.username,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.accent),
             ),
             accountEmail: Text(
               user.email,
-              style: const TextStyle(fontSize: 14),
+              style: TextStyle(fontSize: 14, color: AppColors.accent),
             ),
             currentAccountPicture: CircleAvatar(
-              backgroundColor: Colors.white,
-              backgroundImage:
-                  user.profileImage != null
-                      ? NetworkImage(user.profileImage!)
-                      : null,
-              child:
-                  user.profileImage == null
-                      ? Text(
-                        user.username.isNotEmpty
-                            ? user.username[0].toUpperCase()
-                            : 'U',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue.shade800,
-                        ),
-                      )
-                      : null,
+              backgroundColor: AppColors.accent,
+              child: Text(
+                user.username.isNotEmpty
+                    ? user.username[0].toUpperCase()
+                    : 'U',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
             ),
           ),
           ListTile(
@@ -140,53 +134,46 @@ class DashboardScreen extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
+              color: AppColors.secondary.withOpacity(0.2),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
                   children: [
                     CircleAvatar(
                       radius: 30,
-                      backgroundColor: Colors.blue.shade100,
-                      backgroundImage:
-                          user.profileImage != null
-                              ? NetworkImage(user.profileImage!)
-                              : null,
-                      child:
-                          user.profileImage == null
-                              ? Text(
-                                user.username.isNotEmpty
-                                    ? user.username[0].toUpperCase()
-                                    : 'U',
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue.shade800,
-                                ),
-                              )
-                              : null,
+                      backgroundColor: AppColors.accent,
+                      child: Text(
+                        user.username.isNotEmpty
+                            ? user.username[0].toUpperCase()
+                            : 'U',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Welcome, ${user.username[0].toUpperCase()}${user.username.substring(1)}!',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Welcome, ${user.username[0].toUpperCase()}${user.username.substring(1)}!',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
                           ),
-                          const SizedBox(height: 4),
-                          // Text(
-                          //   'Role: ${user.role.toUpperCase()}',
-                          //   style: TextStyle(
-                          //     color: Colors.grey[700],
-                          //     fontWeight: FontWeight.w500,
-                          //   ),
-                          // ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 4),
+                        // Text(
+                        //   'Role: ${user.role.toUpperCase()}',
+                        //   style: TextStyle(
+                        //     color: Colors.grey[700],
+                        //     fontWeight: FontWeight.w500,
+                        //   ),
+                        // ),
+                      ],
                     ),
                   ],
                 ),
@@ -202,7 +189,7 @@ class DashboardScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.blue.shade800,
+                color: AppColors.primary,
               ),
             ),
           ),
@@ -221,7 +208,7 @@ class DashboardScreen extends StatelessWidget {
                   context,
                   icon: Icons.chat,
                   title: 'Chat',
-                  color: Colors.blue,
+                  color: AppColors.primary,
                   onTap: () {
                     // Navigate to Chat Screen
                     Navigator.push(
@@ -230,12 +217,12 @@ class DashboardScreen extends StatelessWidget {
                         builder:
                             (context) => ChatScreen(
                               user: User(
+                                id: '',
                                 username: user.username,
                                 email: user.email,
-                                profileImage: user.profileImage,
                                 role: user.role,
-                                password: user.password,
-                                mc: user.mc,
+                                userPassword: '',
+                                missionalCommunity: '',
                               ),
                             ),
                       ),
@@ -246,7 +233,7 @@ class DashboardScreen extends StatelessWidget {
                   context,
                   icon: Icons.people,
                   title: 'MCs',
-                  color: Colors.green,
+                  color: AppColors.secondary,
                   onTap: () {
                     // Navigate to Missional Community Screen
                     Navigator.push(
@@ -259,7 +246,7 @@ class DashboardScreen extends StatelessWidget {
                   context,
                   icon: Icons.analytics,
                   title: 'Retention',
-                  color: Colors.orange,
+                  color: AppColors.accent,
                   onTap: () {
                     // Navigate to Retention Screen
                   },
@@ -268,7 +255,7 @@ class DashboardScreen extends StatelessWidget {
                   context,
                   icon: Icons.library_books,
                   title: 'Sermons',
-                  color: Colors.purple,
+                  color: AppColors.primary.withOpacity(0.7),
                   onTap: () {
                     // Navigate to Sermons Screen
                   },
@@ -277,7 +264,7 @@ class DashboardScreen extends StatelessWidget {
                   context,
                   icon: Icons.event,
                   title: 'Events',
-                  color: Colors.red,
+                  color: AppColors.dark,
                   onTap: () {
                     // Navigate to Events Screen
                     Navigator.push(
@@ -292,7 +279,7 @@ class DashboardScreen extends StatelessWidget {
                   context,
                   icon: Icons.more_horiz,
                   title: 'More',
-                  color: Colors.teal,
+                  color: AppColors.secondary,
                   onTap: () {
                     // Navigate to More Screen
                   },
@@ -309,7 +296,7 @@ class DashboardScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.blue.shade800,
+                color: AppColors.primary,
               ),
             ),
           ),

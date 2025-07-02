@@ -7,6 +7,8 @@ class CustomButton extends StatelessWidget {
   final bool isOutlined;
   final double height;
   final IconData? icon;
+  final Color? color;
+  final Color? textColor;
 
   const CustomButton({
     super.key,
@@ -15,6 +17,8 @@ class CustomButton extends StatelessWidget {
     this.isOutlined = false,
     this.height = 54.0,
     this.icon,
+    this.color,
+    this.textColor,
     // required MaterialColor color,
   });
 
@@ -26,10 +30,9 @@ class CustomButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor:
-              isOutlined ? Colors.blue : Colors.blue, // color.shade500,
-          foregroundColor: isOutlined ? Colors.blue : Colors.white,
-          side: isOutlined ? BorderSide(color: Colors.blue) : null,
+          backgroundColor: color ?? (isOutlined ? Colors.blue : Colors.blue),
+          foregroundColor: textColor ?? (isOutlined ? Colors.blue : Colors.white),
+          side: isOutlined ? BorderSide(color: color ?? Colors.blue) : null,
           elevation: isOutlined ? 0 : 2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
@@ -41,7 +44,7 @@ class CustomButton extends StatelessWidget {
             if (icon != null) ...[Icon(icon), const SizedBox(width: 12)],
             Text(
               text,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
             ),
           ],
         ),

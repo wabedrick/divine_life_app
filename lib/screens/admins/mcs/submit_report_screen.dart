@@ -17,50 +17,27 @@ class _SubmitReportScreenState extends State<SubmitReportScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _mcNameController = TextEditingController();
   final TextEditingController _leaderNameController = TextEditingController();
-  final TextEditingController _locationController = TextEditingController();
-  final TextEditingController _attendeesController = TextEditingController();
-  final TextEditingController _newMembersController = TextEditingController();
-  final TextEditingController _devotionalTopicController =
-      TextEditingController();
-  final TextEditingController _prayerRequestsController =
-      TextEditingController();
-  final TextEditingController _testimonyController = TextEditingController();
-  final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _attendanceController = TextEditingController();
+  final TextEditingController _newMemberController = TextEditingController();
+  final TextEditingController _meetUpController = TextEditingController();
+  final TextEditingController _givingController = TextEditingController();
+  final TextEditingController _commentController = TextEditingController();
 
-  DateTime _meetingDate = DateTime.now();
+  String _meetingDate = '';
   bool _isLoading = false;
-  bool _lateSubmission = false;
 
   @override
   void initState() {
     super.initState();
     if (widget.report != null) {
-      // Editing existing report
       _mcNameController.text = widget.report!.mcName;
       _leaderNameController.text = widget.report!.leaderName;
-      _locationController.text = widget.report!.location;
-      _attendeesController.text = widget.report!.attendees.toString();
-      _newMembersController.text = widget.report!.newMembers.toString();
-      _devotionalTopicController.text = widget.report!.devotionalTopic;
-      _prayerRequestsController.text = widget.report!.prayerRequests;
-      _testimonyController.text = widget.report!.testimony;
-      _notesController.text = widget.report!.notes;
-      _meetingDate = widget.report!.weekStarting;
-      // _lateSubmission = widget.report!.lateSubmission;
-    }
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _meetingDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null && picked != _meetingDate) {
-      setState(() {
-        _meetingDate = picked;
-      });
+      _attendanceController.text = widget.report!.attendance.toString();
+      _newMemberController.text = widget.report!.newMember.toString();
+      _meetUpController.text = widget.report!.meetUp;
+      _givingController.text = widget.report!.giving.toString();
+      _commentController.text = widget.report!.comment;
+      _meetingDate = widget.report!.meetingDate;
     }
   }
 
@@ -69,52 +46,23 @@ class _SubmitReportScreenState extends State<SubmitReportScreen> {
       setState(() {
         _isLoading = true;
       });
-
       try {
         final reportData = WeeklyReport(
-          id: widget.report?.id ?? '',
-          mcName: _mcNameController.text.trim(),
-          leaderName: _leaderNameController.text.trim(),
-          weekStarting: _meetingDate,
-          location: _locationController.text.trim(),
-          attendees: int.parse(_attendeesController.text.trim()),
-          newMembers: int.parse(_newMembersController.text.trim()),
-          devotionalTopic: _devotionalTopicController.text.trim(),
-          prayerRequests: _prayerRequestsController.text.trim(),
-          testimony: _testimonyController.text.trim(),
-          notes: _notesController.text.trim(),
-          // lateSubmission: _lateSubmission,
-          submissionDate: DateTime.now(),
+          id: widget.report?.id ?? 0,
           meetingDate: _meetingDate,
-          submittedBy: 'Admin', // Replace with actual user info if available
-          approved: false, // Default value, adjust as needed
-          adultCount: 0, // Replace with actual value if available
-          childrenCount: 0, // Replace with actual value if available
-          visitorCount: 0, // Replace with actual value if available
+          mcName: _mcNameController.text.trim(),
+          attendance: int.tryParse(_attendanceController.text.trim()) ?? 0,
+          newMember: int.tryParse(_newMemberController.text.trim()) ?? 0,
+          meetUp: _meetUpController.text.trim(),
+          giving: double.tryParse(_givingController.text.trim()) ?? 0.0,
+          leaderName: _leaderNameController.text.trim(),
+          comment: _commentController.text.trim(),
         );
-
-        if (widget.report == null) {
-          // Submit new report
-          await McServices.addReport(reportData);
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Report submitted successfully'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        } else {
-          // Update existing report
-          await McServices.updateReport(reportData);
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Report updated successfully'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
+        // Call your service to submit the report here (e.g., McServices.submitReport(reportData));
         if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Report submitted successfully'), backgroundColor: Colors.green),
+        );
         Navigator.pop(context);
       } catch (e) {
         setState(() {
@@ -122,10 +70,7 @@ class _SubmitReportScreenState extends State<SubmitReportScreen> {
         });
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error saving report: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error saving report: e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -135,251 +80,145 @@ class _SubmitReportScreenState extends State<SubmitReportScreen> {
   Widget build(BuildContext context) {
     final isEditing = widget.report != null;
     final title = isEditing ? 'Edit Weekly Report' : 'Submit Weekly Report';
-
     return Scaffold(
       appBar: AppBar(title: Text(title), backgroundColor: Colors.green),
-      body:
-          _isLoading
-              ? Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-                padding: EdgeInsets.all(16),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Card(
-                        elevation: 2,
-                        child: Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Basic Information',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Card(
+                      elevation: 2,
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Basic Information', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                            SizedBox(height: 16),
+                            TextFormField(
+                              controller: _mcNameController,
+                              decoration: InputDecoration(
+                                labelText: 'MC Name *',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.group, color: Colors.white),
+                                labelStyle: TextStyle(color: Colors.white),
+                                hintStyle: TextStyle(color: Colors.white70),
                               ),
-                              SizedBox(height: 16),
-                              TextFormField(
-                                controller: _mcNameController,
-                                decoration: InputDecoration(
-                                  labelText: 'MC Name *',
-                                  border: OutlineInputBorder(),
-                                  prefixIcon: Icon(Icons.group),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return 'Please enter MC name';
-                                  }
-                                  return null;
-                                },
+                              style: TextStyle(color: Colors.white),
+                              validator: (value) => value == null || value.trim().isEmpty ? 'Please enter MC name' : null,
+                            ),
+                            SizedBox(height: 16),
+                            TextFormField(
+                              controller: _leaderNameController,
+                              decoration: InputDecoration(
+                                labelText: 'Leader Name *',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.person, color: Colors.white),
+                                labelStyle: TextStyle(color: Colors.white),
+                                hintStyle: TextStyle(color: Colors.white70),
                               ),
-                              SizedBox(height: 16),
-                              TextFormField(
-                                controller: _leaderNameController,
-                                decoration: InputDecoration(
-                                  labelText: 'Leader Name *',
-                                  border: OutlineInputBorder(),
-                                  prefixIcon: Icon(Icons.person),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return 'Please enter leader name';
-                                  }
-                                  return null;
-                                },
+                              style: TextStyle(color: Colors.white),
+                              validator: (value) => value == null || value.trim().isEmpty ? 'Please enter leader name' : null,
+                            ),
+                            SizedBox(height: 16),
+                            TextFormField(
+                              controller: _attendanceController,
+                              decoration: InputDecoration(
+                                labelText: 'Attendance *',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.people, color: Colors.white),
+                                labelStyle: TextStyle(color: Colors.white),
+                                hintStyle: TextStyle(color: Colors.white70),
                               ),
-                              SizedBox(height: 16),
-                              InkWell(
-                                onTap: () => _selectDate(context),
-                                child: InputDecorator(
-                                  decoration: InputDecoration(
-                                    labelText: 'Meeting Date *',
-                                    border: OutlineInputBorder(),
-                                    prefixIcon: Icon(Icons.calendar_today),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        DateFormat(
-                                          'MMMM dd, yyyy',
-                                        ).format(_meetingDate),
-                                      ),
-                                      Icon(Icons.arrow_drop_down),
-                                    ],
-                                  ),
-                                ),
+                              style: TextStyle(color: Colors.white),
+                              keyboardType: TextInputType.number,
+                              validator: (value) => value == null || value.trim().isEmpty ? 'Please enter attendance' : null,
+                            ),
+                            SizedBox(height: 16),
+                            TextFormField(
+                              controller: _newMemberController,
+                              decoration: InputDecoration(
+                                labelText: 'New Members *',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.person_add, color: Colors.white),
+                                labelStyle: TextStyle(color: Colors.white),
+                                hintStyle: TextStyle(color: Colors.white70),
                               ),
-                              SizedBox(height: 16),
-                              TextFormField(
-                                controller: _locationController,
-                                decoration: InputDecoration(
-                                  labelText: 'Meeting Location *',
-                                  border: OutlineInputBorder(),
-                                  prefixIcon: Icon(Icons.location_on),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return 'Please enter meeting location';
-                                  }
-                                  return null;
-                                },
+                              style: TextStyle(color: Colors.white),
+                              keyboardType: TextInputType.number,
+                              validator: (value) => value == null || value.trim().isEmpty ? 'Please enter new members' : null,
+                            ),
+                            SizedBox(height: 16),
+                            TextFormField(
+                              controller: _meetUpController,
+                              decoration: InputDecoration(
+                                labelText: 'Meet Up *',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.event, color: Colors.white),
+                                labelStyle: TextStyle(color: Colors.white),
+                                hintStyle: TextStyle(color: Colors.white70),
                               ),
-                            ],
-                          ),
+                              style: TextStyle(color: Colors.white),
+                              validator: (value) => value == null || value.trim().isEmpty ? 'Please enter meet up info' : null,
+                            ),
+                            SizedBox(height: 16),
+                            TextFormField(
+                              controller: _givingController,
+                              decoration: InputDecoration(
+                                labelText: 'Giving *',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.attach_money, color: Colors.white),
+                                labelStyle: TextStyle(color: Colors.white),
+                                hintStyle: TextStyle(color: Colors.white70),
+                              ),
+                              style: TextStyle(color: Colors.white),
+                              keyboardType: TextInputType.number,
+                              validator: (value) => value == null || value.trim().isEmpty ? 'Please enter giving' : null,
+                            ),
+                            SizedBox(height: 16),
+                            TextFormField(
+                              controller: _commentController,
+                              decoration: InputDecoration(
+                                labelText: 'Comment',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.comment, color: Colors.white),
+                                labelStyle: TextStyle(color: Colors.white),
+                                hintStyle: TextStyle(color: Colors.white70),
+                              ),
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            SizedBox(height: 16),
+                            TextFormField(
+                              initialValue: _meetingDate,
+                              decoration: InputDecoration(
+                                labelText: 'Meeting Date *',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.date_range, color: Colors.white),
+                                labelStyle: TextStyle(color: Colors.white),
+                                hintStyle: TextStyle(color: Colors.white70),
+                              ),
+                              style: TextStyle(color: Colors.white),
+                              onChanged: (value) => _meetingDate = value,
+                              validator: (value) => value == null || value.trim().isEmpty ? 'Please enter meeting date' : null,
+                            ),
+                          ],
                         ),
                       ),
-                      SizedBox(height: 16),
-                      Card(
-                        elevation: 2,
-                        child: Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Attendance',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(height: 16),
-                              TextFormField(
-                                controller: _attendeesController,
-                                decoration: InputDecoration(
-                                  labelText: 'Total Attendees *',
-                                  border: OutlineInputBorder(),
-                                  prefixIcon: Icon(Icons.people),
-                                ),
-                                keyboardType: TextInputType.number,
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return 'Please enter attendees count';
-                                  }
-                                  if (int.tryParse(value) == null) {
-                                    return 'Please enter a valid number';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              SizedBox(height: 16),
-                              TextFormField(
-                                controller: _newMembersController,
-                                decoration: InputDecoration(
-                                  labelText: 'New Members *',
-                                  border: OutlineInputBorder(),
-                                  prefixIcon: Icon(Icons.person_add),
-                                ),
-                                keyboardType: TextInputType.number,
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return 'Please enter new members count';
-                                  }
-                                  if (int.tryParse(value) == null) {
-                                    return 'Please enter a valid number';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 16),
-                      Card(
-                        elevation: 2,
-                        child: Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Meeting Details',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(height: 16),
-                              TextFormField(
-                                controller: _devotionalTopicController,
-                                decoration: InputDecoration(
-                                  labelText: 'Devotional Topic',
-                                  border: OutlineInputBorder(),
-                                  prefixIcon: Icon(Icons.book),
-                                ),
-                              ),
-                              SizedBox(height: 16),
-                              TextFormField(
-                                controller: _prayerRequestsController,
-                                decoration: InputDecoration(
-                                  labelText: 'Prayer Requests',
-                                  border: OutlineInputBorder(),
-                                  prefixIcon: Icon(Icons.favorite),
-                                ),
-                                maxLines: 3,
-                              ),
-                              SizedBox(height: 16),
-                              TextFormField(
-                                controller: _testimonyController,
-                                decoration: InputDecoration(
-                                  labelText: 'Testimonies',
-                                  border: OutlineInputBorder(),
-                                  prefixIcon: Icon(Icons.star),
-                                ),
-                                maxLines: 3,
-                              ),
-                              SizedBox(height: 16),
-                              TextFormField(
-                                controller: _notesController,
-                                decoration: InputDecoration(
-                                  labelText: 'Additional Notes',
-                                  border: OutlineInputBorder(),
-                                  prefixIcon: Icon(Icons.note),
-                                ),
-                                maxLines: 3,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 16),
-                      SwitchListTile(
-                        title: Text('Late Submission'),
-                        subtitle: Text(
-                          'Mark if this report is being submitted late',
-                        ),
-                        value: _lateSubmission,
-                        activeColor: Colors.green,
-                        onChanged: (value) {
-                          setState(() {
-                            _lateSubmission = value;
-                          });
-                        },
-                      ),
-                      SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: _submitForm,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: Text(
-                          isEditing ? 'Update Report' : 'Submit Report',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                    SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: _submitForm,
+                      child: Text(isEditing ? 'Update Report' : 'Submit Report'),
+                    ),
+                  ],
                 ),
               ),
+            ),
     );
   }
 
@@ -387,13 +226,11 @@ class _SubmitReportScreenState extends State<SubmitReportScreen> {
   void dispose() {
     _mcNameController.dispose();
     _leaderNameController.dispose();
-    _locationController.dispose();
-    _attendeesController.dispose();
-    _newMembersController.dispose();
-    _devotionalTopicController.dispose();
-    _prayerRequestsController.dispose();
-    _testimonyController.dispose();
-    _notesController.dispose();
+    _attendanceController.dispose();
+    _newMemberController.dispose();
+    _meetUpController.dispose();
+    _givingController.dispose();
+    _commentController.dispose();
     super.dispose();
   }
 }

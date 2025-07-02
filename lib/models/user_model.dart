@@ -1,82 +1,67 @@
 // models/user_model.dart
 class User {
-  // final int id;
+  final String id;
   final String username;
   final String email;
-  final String? profileImage;
-  final String role;
-  final Map<String, dynamic>? additionalInfo;
-  final String? password;
-  final String mc;
+  final String? missionalCommunity;
+  final String? userPassword;
+  final String? role;
+  final String? mcId;
 
   User({
-    // this.id,
+    required this.id,
     required this.username,
     required this.email,
-    this.profileImage,
-    required this.role,
-    this.additionalInfo,
-    required this.password,
-    required this.mc,
+    this.missionalCommunity,
+    this.userPassword,
+    this.role,
+    this.mcId,
   });
 
   /// Create a User object from JSON data
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      // id: json['id'] is String ? int.parse(json['id']) : json['id'],
+      id: json['id'].toString(),
       username: json['username'],
       email: json['email'],
-      mc: json['mc'] ?? json['mc'] ?? '',
-      profileImage: json['profile_image'] ?? json['profileImage'],
-      role: json['role'] ?? 'member',
-      additionalInfo: json['additional_info'] ?? json['additionalInfo'],
-      // createdAt:
-      //     json['created_at'] != null
-      //         ? DateTime.parse(json['created_at'])
-      //         : (json['createdAt'] != null
-      //             ? DateTime.parse(json['createdAt'])
-      //             : DateTime.now()),
-      password: json['password'],
+      missionalCommunity: json['missional_community'],
+      userPassword: json['user_password'],
+      role: json['role'],
+      mcId: json['mc_id']?.toString(),
     );
   }
-
-  get id => null;
 
   /// Convert User object to JSON
   Map<String, dynamic> toJson() {
     return {
-      // 'id': id,
+      'id': id,
       'username': username,
       'email': email,
-      'profile_image': profileImage,
+      'missional_community': missionalCommunity,
+      'user_password': userPassword,
       'role': role,
-      'additional_info': additionalInfo,
-      'password': password,
-      'mc': mc,
+      'mc_id': mcId,
     };
   }
 
   /// Create a copy of this User with modified fields
   User copyWith({
-    int? id,
+    String? id,
     String? username,
     String? email,
-    String? fullName,
-    String? profileImage,
+    String? missionalCommunity,
+    String? userPassword,
     String? role,
-    Map<String, dynamic>? additionalInfo,
-    String? mc,
-    String? password,
+    String? mcId,
   }) {
     return User(
-      // id: id ?? this.id,
+      id: id ?? this.id,
       username: username ?? this.username,
       email: email ?? this.email,
-      profileImage: profileImage ?? this.profileImage,
+      missionalCommunity: missionalCommunity ?? this.missionalCommunity,
+      userPassword: userPassword ?? this.userPassword,
       role: role ?? this.role,
-      additionalInfo: additionalInfo ?? this.additionalInfo,
-      password: password ?? this.password,
-      mc: mc ?? this.mc,
+      mcId: mcId ?? this.mcId,
     );
   }
 }

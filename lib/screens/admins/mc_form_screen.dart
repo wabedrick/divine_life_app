@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../../models/mc_model.dart';
 import '../../services/missional_community_service.dart';
+import '../../utils/app_colors.dart';
 
 class MCFormScreen extends StatefulWidget {
   final MissionalCommunity? mc;
@@ -158,6 +159,7 @@ class _MCFormScreenState extends State<MCFormScreen> {
         centerTitle: true,
         backgroundColor: Colors.blue,
       ),
+      backgroundColor: AppColors.dark,
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
         child: Form(
@@ -168,86 +170,68 @@ class _MCFormScreenState extends State<MCFormScreen> {
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(
-                  labelText: 'Missional Community Name',
+                  labelText: 'MC Name',
+                  prefixIcon: Icon(Icons.group, color: Colors.white),
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.group),
+                  labelStyle: TextStyle(color: Colors.white),
+                  hintStyle: TextStyle(color: Colors.white70),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a name';
-                  }
-                  if (value.length < 3) {
-                    return 'Name must be at least 3 characters long';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: _locationController,
-                decoration: InputDecoration(
-                  labelText: 'Location',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.location_on),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a location';
-                  }
-                  return null;
-                },
+                style: TextStyle(color: Colors.white),
+                validator: (value) => value == null || value.isEmpty ? 'Please enter MC name' : null,
               ),
               SizedBox(height: 16),
               TextFormField(
                 controller: _leaderNameController,
                 decoration: InputDecoration(
                   labelText: 'Leader Name',
+                  prefixIcon: Icon(Icons.person, color: Colors.white),
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
+                  labelStyle: TextStyle(color: Colors.white),
+                  hintStyle: TextStyle(color: Colors.white70),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter leader name';
-                  }
-                  return null;
-                },
+                style: TextStyle(color: Colors.white),
+                validator: (value) => value == null || value.isEmpty ? 'Please enter leader name' : null,
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: _locationController,
+                decoration: InputDecoration(
+                  labelText: 'Location',
+                  prefixIcon: Icon(Icons.location_on, color: Colors.white),
+                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(color: Colors.white),
+                  hintStyle: TextStyle(color: Colors.white70),
+                ),
+                style: TextStyle(color: Colors.white),
+                validator: (value) => value == null || value.isEmpty ? 'Please enter a location' : null,
               ),
               SizedBox(height: 16),
               TextFormField(
                 controller: _leaderPhoneNumberController,
                 decoration: InputDecoration(
                   labelText: 'Leader Phone Number',
+                  prefixIcon: Icon(Icons.phone, color: Colors.white),
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.phone),
+                  labelStyle: TextStyle(color: Colors.white),
+                  hintStyle: TextStyle(color: Colors.white70),
                 ),
+                style: TextStyle(color: Colors.white),
                 keyboardType: TextInputType.phone,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter leader phone number';
-                  }
-                  // Basic phone number validation
-                  if (!RegExp(r'^[0-9]{10}$').hasMatch(value)) {
-                    return 'Please enter a valid 10-digit phone number';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty ? 'Please enter leader phone number' : null,
               ),
               SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _isLoading ? null : _saveMC,
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: Colors.blue,
+                  backgroundColor: AppColors.accent,
                 ),
-                child:
-                    _isLoading
-                        ? CircularProgressIndicator(color: Colors.white)
-                        : Text(
-                          _isEditing
-                              ? 'Update Missional Community'
-                              : 'Create Missional Community',
-                          style: TextStyle(color: Colors.black),
-                        ),
+                child: _isLoading
+                    ? CircularProgressIndicator(color: Colors.white)
+                    : Text(
+                        _isEditing ? 'Update Missional Community' : 'Create Missional Community',
+                        style: TextStyle(color: AppColors.primary),
+                      ),
               ),
             ],
           ),

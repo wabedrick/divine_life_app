@@ -9,6 +9,8 @@ import 'reports_screen.dart';
 import 'report_detail_screen.dart';
 import '../../services/auth_service.dart';
 import '../login_screen.dart';
+import '../../utils/app_colors.dart';
+import 'user_management_screen.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -18,16 +20,78 @@ class AdminDashboard extends StatefulWidget {
   _AdminDashboardState createState() => _AdminDashboardState();
 }
 
+class WeeklySummaryDashboard extends StatelessWidget {
+  final Map<String, dynamic> summary;
+  const WeeklySummaryDashboard({required this.summary, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 16,
+      runSpacing: 16,
+      children: [
+        _buildSummaryCard('MCs Met', summary['mcsMet'].toString(), Icons.check_circle, AppColors.primary, context),
+        _buildSummaryCard('Did Not Meet', summary['mcsDidNotMeet'].toString(), Icons.cancel, AppColors.dark, context),
+        _buildSummaryCard('Attendance', summary['totalAttendance'].toString(), Icons.people, AppColors.primary, context),
+        _buildSummaryCard('New Members', summary['totalNewMembers'].toString(), Icons.person_add, AppColors.primary, context),
+        _buildSummaryCard('Giving', 'UGX ${summary['totalGiving']?.toStringAsFixed(2) ?? '0.00'}', Icons.attach_money, AppColors.primary, context),
+      ],
+    );
+  }
+
+  Widget _buildSummaryCard(String title, String value, IconData icon, Color color, BuildContext context) {
+    final double cardWidth = (MediaQuery.of(context).size.width - 48) / 2; // 16 padding * 2 + 16 spacing
+    return SizedBox(
+      width: cardWidth,
+      child: Card(
+        color: Colors.white,
+        elevation: 6,
+        shadowColor: AppColors.dark.withOpacity(0.2),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: AppColors.primary.withOpacity(0.2), width: 1.5),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 32, color: color),
+              SizedBox(height: 8),
+              Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87)),
+              SizedBox(height: 4),
+              Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _AdminDashboardState extends State<AdminDashboard> {
-  ReportSummary? summary;
+  Map<String, dynamic>? weeklySummary;
+  bool isLoadingSummary = true;
   List<WeeklyReport> recentReports = [];
   bool isLoading = true;
+  DateTime? selectedStartDate;
+  DateTime? selectedEndDate;
   final AuthService _authService = AuthService();
 
   @override
   void initState() {
     super.initState();
+    _setCurrentWeek();
+    _loadWeeklySummary();
     _loadDashboardData();
+  }
+
+  void _setCurrentWeek() {
+    final now = DateTime.now();
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    final nextMonday = monday.add(Duration(days: 7));
+    selectedStartDate = DateTime(monday.year, monday.month, monday.day);
+    selectedEndDate = DateTime(nextMonday.year, nextMonday.month, nextMonday.day);
   }
 
   Future<void> _logout(BuildContext context) async {
@@ -50,29 +114,54 @@ class _AdminDashboardState extends State<AdminDashboard> {
     }
   }
 
-  Future<void> _loadDashboardData() async {
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      // Load summary and recent reports
-      final summaryResponse = await McServices.getReportSummary();
-      final reportsResponse = await McServices.getRecentReports();
-
+  Future<void> _pickWeek(BuildContext context) async {
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      initialDateRange: selectedStartDate != null && selectedEndDate != null
+          ? DateTimeRange(start: selectedStartDate!, end: selectedEndDate!)
+          : null,
+    );
+    if (picked != null) {
       setState(() {
-        summary = summaryResponse;
-        recentReports = reportsResponse;
+        selectedStartDate = picked.start;
+        selectedEndDate = picked.end;
+      });
+      await _loadWeeklySummary();
+      await _loadDashboardData();
+    }
+  }
+
+  Future<void> _loadWeeklySummary() async {
+    setState(() => isLoadingSummary = true);
+    try {
+      final summary = await McServices.fetchWeeklySummary(
+        startDate: selectedStartDate?.toIso8601String().split('T')[0],
+        endDate: selectedEndDate?.toIso8601String().split('T')[0],
+      );
+      setState(() {
+        weeklySummary = summary;
+        isLoadingSummary = false;
+      });
+    } catch (e) {
+      setState(() => isLoadingSummary = false);
+    }
+  }
+
+  Future<void> _loadDashboardData() async {
+    setState(() => isLoading = true);
+    try {
+      final reports = await McServices.fetchAllReports(
+        startDate: selectedStartDate?.toIso8601String().split('T')[0],
+        endDate: selectedEndDate?.toIso8601String().split('T')[0],
+      );
+      setState(() {
+        recentReports = reports;
         isLoading = false;
       });
     } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading dashboard: ${e.toString()}')),
-      );
+      setState(() => isLoading = false);
     }
   }
 
@@ -85,17 +174,64 @@ class _AdminDashboardState extends State<AdminDashboard> {
         drawer: _buildDrawer(context),
       );
     }
-
+    // Get week range string if available
+    String weekRange = '';
+    DateTime? start;
+    DateTime? end;
+    if (selectedStartDate != null && selectedEndDate != null) {
+      start = selectedStartDate;
+      end = selectedEndDate;
+    } else if (weeklySummary != null && weeklySummary!['startDate'] != null && weeklySummary!['endDate'] != null) {
+      start = DateTime.parse(weeklySummary!['startDate']);
+      end = DateTime.parse(weeklySummary!['endDate']);
+    }
+    if (start != null && end != null) {
+      weekRange = 'Week: '
+        + '${start.day}/${start.month}/${start.year}'
+        + ' - '
+        + '${(end.subtract(Duration(days: 1))).day}/${(end.subtract(Duration(days: 1))).month}/${(end.subtract(Duration(days: 1))).year}';
+    }
+    print('WEEK RANGE: ' + weekRange);
     return Scaffold(
       appBar: AppBar(title: Text('Admin Dashboard')),
+      backgroundColor: AppColors.dark,
       body: RefreshIndicator(
-        onRefresh: _loadDashboardData,
+        onRefresh: () async {
+          setState(() {
+            _setCurrentWeek();
+          });
+          await _loadWeeklySummary();
+          await _loadDashboardData();
+        },
         child: SingleChildScrollView(
           padding: EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSummaryCards(),
+              if (weekRange.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: Text(
+                    weekRange,
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blueGrey),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
+              isLoadingSummary
+                ? Center(child: CircularProgressIndicator())
+                : WeeklySummaryDashboard(summary: weeklySummary ?? {
+                    'mcsMet': 0,
+                    'mcsDidNotMeet': 0,
+                    'totalAttendance': 0,
+                    'totalNewMembers': 0,
+                    'totalGiving': 0.0,
+                  }),
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => _pickWeek(context),
+                child: Text('Select Week'),
+              ),
               SizedBox(height: 24),
               Text(
                 'Recent Reports',
@@ -185,6 +321,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
               );
             },
           ),
+          ListTile(
+            leading: Icon(Icons.people),
+            title: Text('User Management'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => UserManagementScreen()),
+              );
+            },
+          ),
           Divider(),
           ListTile(
             leading: Icon(Icons.logout),
@@ -201,60 +348,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Widget _buildSummaryCards() {
-    return GridView.count(
-      crossAxisCount: 2,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      children: [
-        _buildSummaryCard(
-          'Total MCs',
-          '${summary?.totalMCs ?? 0}',
-          Icons.group,
-        ),
-        _buildSummaryCard(
-          'Meetings Held',
-          '${summary?.totalMeetingsHeld ?? 0}',
-          Icons.calendar_today,
-        ),
-        _buildSummaryCard(
-          'Total Attendees',
-          '${summary?.totalAttendees ?? 0}',
-          Icons.people,
-        ),
-        _buildSummaryCard(
-          'New Members',
-          '${summary?.totalNewMembers ?? 0}',
-          Icons.person_add,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSummaryCard(String title, String value, IconData icon) {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 32, color: Theme.of(context).primaryColor),
-            SizedBox(height: 8),
-            Text(title, style: TextStyle(fontSize: 14)),
-            SizedBox(height: 4),
-            Text(
-              value,
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildRecentReportsList() {
     if (recentReports.isEmpty) {
       return Center(
@@ -264,21 +357,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
         ),
       );
     }
-
+    // Show only the two most recent reports
+    final latestReports = recentReports.take(2).toList();
     return ListView.builder(
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),
-      itemCount: recentReports.length,
+      itemCount: latestReports.length,
       itemBuilder: (context, index) {
-        final report = recentReports[index];
+        final report = latestReports[index];
         return Card(
           margin: EdgeInsets.only(bottom: 12),
           child: ListTile(
             title: Text(report.mcName),
-            subtitle: Text(
-              'Week of ${DateFormat('MMM d, yyyy').format(report.weekStarting)}',
-            ),
-            trailing: Text('${report.attendees} attendees'),
+            subtitle: Text('Meeting Date: ${report.meetingDate}'),
+            trailing: Text('${report.attendance} attendance'),
             onTap: () {
               Navigator.push(
                 context,
