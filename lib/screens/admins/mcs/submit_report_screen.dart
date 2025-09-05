@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../models/weekly_report_model.dart';
 import '../../../services/mc_services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SubmitReportScreen extends StatefulWidget {
   final WeeklyReport? report;
@@ -22,6 +23,7 @@ class _SubmitReportScreenState extends State<SubmitReportScreen> {
   final TextEditingController _meetUpController = TextEditingController();
   final TextEditingController _givingController = TextEditingController();
   final TextEditingController _commentController = TextEditingController();
+  final TextEditingController _meetingDateController = TextEditingController();
 
   String _meetingDate = '';
   bool _isLoading = false;
@@ -38,7 +40,18 @@ class _SubmitReportScreenState extends State<SubmitReportScreen> {
       _givingController.text = widget.report!.giving.toString();
       _commentController.text = widget.report!.comment;
       _meetingDate = widget.report!.meetingDate;
+      _meetingDateController.text = _meetingDate;
+    } else {
+      _prefillUserInfo();
     }
+  }
+
+  Future<void> _prefillUserInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _mcNameController.text = prefs.getString('mc') ?? '';
+      _leaderNameController.text = prefs.getString('user_name') ?? '';
+    });
   }
 
   Future<void> _submitForm() async {
@@ -58,7 +71,7 @@ class _SubmitReportScreenState extends State<SubmitReportScreen> {
           leaderName: _leaderNameController.text.trim(),
           comment: _commentController.text.trim(),
         );
-        // Call your service to submit the report here (e.g., McServices.submitReport(reportData));
+        await McServices.submitReport(reportData);
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Report submitted successfully'), backgroundColor: Colors.green),
@@ -70,7 +83,7 @@ class _SubmitReportScreenState extends State<SubmitReportScreen> {
         });
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving report: e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error saving report: ${e.toString()}'), backgroundColor: Colors.red),
         );
       }
     }
@@ -93,6 +106,10 @@ class _SubmitReportScreenState extends State<SubmitReportScreen> {
                   children: [
                     Card(
                       elevation: 2,
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       child: Padding(
                         padding: EdgeInsets.all(16),
                         child: Column(
@@ -102,27 +119,37 @@ class _SubmitReportScreenState extends State<SubmitReportScreen> {
                             SizedBox(height: 16),
                             TextFormField(
                               controller: _mcNameController,
+                              readOnly: true,
                               decoration: InputDecoration(
                                 labelText: 'MC Name *',
                                 border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.group, color: Colors.white),
-                                labelStyle: TextStyle(color: Colors.white),
-                                hintStyle: TextStyle(color: Colors.white70),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.grey),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.green, width: 2),
+                                ),
+                                prefixIcon: Icon(Icons.group),
+                                hintText: 'MC not found',
                               ),
-                              style: TextStyle(color: Colors.white),
                               validator: (value) => value == null || value.trim().isEmpty ? 'Please enter MC name' : null,
                             ),
                             SizedBox(height: 16),
                             TextFormField(
                               controller: _leaderNameController,
+                              readOnly: true,
                               decoration: InputDecoration(
                                 labelText: 'Leader Name *',
                                 border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.person, color: Colors.white),
-                                labelStyle: TextStyle(color: Colors.white),
-                                hintStyle: TextStyle(color: Colors.white70),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.grey),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.green, width: 2),
+                                ),
+                                prefixIcon: Icon(Icons.person),
+                                hintText: 'Leader not found',
                               ),
-                              style: TextStyle(color: Colors.white),
                               validator: (value) => value == null || value.trim().isEmpty ? 'Please enter leader name' : null,
                             ),
                             SizedBox(height: 16),
@@ -131,11 +158,14 @@ class _SubmitReportScreenState extends State<SubmitReportScreen> {
                               decoration: InputDecoration(
                                 labelText: 'Attendance *',
                                 border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.people, color: Colors.white),
-                                labelStyle: TextStyle(color: Colors.white),
-                                hintStyle: TextStyle(color: Colors.white70),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.grey),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.green, width: 2),
+                                ),
+                                prefixIcon: Icon(Icons.people),
                               ),
-                              style: TextStyle(color: Colors.white),
                               keyboardType: TextInputType.number,
                               validator: (value) => value == null || value.trim().isEmpty ? 'Please enter attendance' : null,
                             ),
@@ -145,26 +175,41 @@ class _SubmitReportScreenState extends State<SubmitReportScreen> {
                               decoration: InputDecoration(
                                 labelText: 'New Members *',
                                 border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.person_add, color: Colors.white),
-                                labelStyle: TextStyle(color: Colors.white),
-                                hintStyle: TextStyle(color: Colors.white70),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.grey),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.green, width: 2),
+                                ),
+                                prefixIcon: Icon(Icons.person_add),
                               ),
-                              style: TextStyle(color: Colors.white),
                               keyboardType: TextInputType.number,
                               validator: (value) => value == null || value.trim().isEmpty ? 'Please enter new members' : null,
                             ),
                             SizedBox(height: 16),
-                            TextFormField(
-                              controller: _meetUpController,
+                            DropdownButtonFormField<String>(
+                              value: _meetUpController.text.isNotEmpty ? _meetUpController.text : null,
+                              items: [
+                                DropdownMenuItem(value: 'Yes', child: Text('Yes')),
+                                DropdownMenuItem(value: 'No', child: Text('No')),
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  _meetUpController.text = value ?? '';
+                                });
+                              },
                               decoration: InputDecoration(
                                 labelText: 'Meet Up *',
                                 border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.event, color: Colors.white),
-                                labelStyle: TextStyle(color: Colors.white),
-                                hintStyle: TextStyle(color: Colors.white70),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.grey),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.green, width: 2),
+                                ),
+                                prefixIcon: Icon(Icons.event),
                               ),
-                              style: TextStyle(color: Colors.white),
-                              validator: (value) => value == null || value.trim().isEmpty ? 'Please enter meet up info' : null,
+                              validator: (value) => value == null || value.trim().isEmpty ? 'Please select meet up' : null,
                             ),
                             SizedBox(height: 16),
                             TextFormField(
@@ -172,11 +217,14 @@ class _SubmitReportScreenState extends State<SubmitReportScreen> {
                               decoration: InputDecoration(
                                 labelText: 'Giving *',
                                 border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.attach_money, color: Colors.white),
-                                labelStyle: TextStyle(color: Colors.white),
-                                hintStyle: TextStyle(color: Colors.white70),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.grey),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.green, width: 2),
+                                ),
+                                prefixIcon: Icon(Icons.attach_money),
                               ),
-                              style: TextStyle(color: Colors.white),
                               keyboardType: TextInputType.number,
                               validator: (value) => value == null || value.trim().isEmpty ? 'Please enter giving' : null,
                             ),
@@ -186,24 +234,47 @@ class _SubmitReportScreenState extends State<SubmitReportScreen> {
                               decoration: InputDecoration(
                                 labelText: 'Comment',
                                 border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.comment, color: Colors.white),
-                                labelStyle: TextStyle(color: Colors.white),
-                                hintStyle: TextStyle(color: Colors.white70),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.grey),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.green, width: 2),
+                                ),
+                                prefixIcon: Icon(Icons.comment),
                               ),
-                              style: TextStyle(color: Colors.white),
                             ),
                             SizedBox(height: 16),
                             TextFormField(
-                              initialValue: _meetingDate,
+                              controller: _meetingDateController,
+                              readOnly: true,
+                              onTap: () async {
+                                FocusScope.of(context).unfocus();
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: _meetingDate.isNotEmpty
+                                      ? DateTime.tryParse(_meetingDate) ?? DateTime.now()
+                                      : DateTime.now(),
+                                  firstDate: DateTime(2000),
+                                  lastDate: DateTime(2100),
+                                );
+                                if (picked != null) {
+                                  setState(() {
+                                    _meetingDate = picked.toIso8601String().substring(0, 10);
+                                    _meetingDateController.text = _meetingDate;
+                                  });
+                                }
+                              },
                               decoration: InputDecoration(
                                 labelText: 'Meeting Date *',
                                 border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.date_range, color: Colors.white),
-                                labelStyle: TextStyle(color: Colors.white),
-                                hintStyle: TextStyle(color: Colors.white70),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.grey),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.green, width: 2),
+                                ),
+                                prefixIcon: Icon(Icons.date_range),
                               ),
-                              style: TextStyle(color: Colors.white),
-                              onChanged: (value) => _meetingDate = value,
                               validator: (value) => value == null || value.trim().isEmpty ? 'Please enter meeting date' : null,
                             ),
                           ],
@@ -231,6 +302,7 @@ class _SubmitReportScreenState extends State<SubmitReportScreen> {
     _meetUpController.dispose();
     _givingController.dispose();
     _commentController.dispose();
+    _meetingDateController.dispose();
     super.dispose();
   }
 }

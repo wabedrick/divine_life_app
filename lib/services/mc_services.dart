@@ -6,6 +6,7 @@ import '../models/weekly_report_model.dart';
 
 class McServices {
   static const String _reportsFetchUrl = 'https://divinelifeministriesinternational.org/missionalCommunity/weekly_reports_fetch.php';
+  static const String _reportSubmitUrl = 'https://divinelifeministriesinternational.org/missionalCommunity/weekly_report_submit.php';
 
   static Future<List<WeeklyReport>> fetchAllReports({String? startDate, String? endDate, String? mcName}) async {
     final params = <String, String>{};
@@ -142,5 +143,28 @@ class McServices {
   static Future<Map<String, dynamic>> getMCStats({String? mcName}) async {
     // Implement backend endpoint to support this if needed
     return {};
+  }
+
+  static Future<bool> submitReport(WeeklyReport report) async {
+    final response = await http.post(
+      Uri.parse(_reportSubmitUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'meetingDate': report.meetingDate,
+        'mcName': report.mcName,
+        'attendance': report.attendance,
+        'newMember': report.newMember,
+        'meetUp': report.meetUp,
+        'giving': report.giving,
+        'leaderName': report.leaderName,
+        'comment': report.comment,
+      }),
+    );
+    final data = json.decode(response.body);
+    if (data['success'] == true) {
+      return true;
+    } else {
+      throw Exception(data['message'] ?? 'Failed to submit report');
+    }
   }
 }

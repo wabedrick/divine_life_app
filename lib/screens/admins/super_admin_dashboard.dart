@@ -10,6 +10,7 @@ import 'report_detail_screen.dart';
 import '../../services/auth_service.dart';
 import '../login_screen.dart';
 import '../../utils/app_colors.dart';
+import '../../widgets/role_guard.dart';
 
 class SuperAdminDashboard extends StatefulWidget {
   const SuperAdminDashboard({super.key});
@@ -18,6 +19,7 @@ class SuperAdminDashboard extends StatefulWidget {
   // ignore: library_private_types_in_public_api
   _SuperAdminDashboardState createState() => _SuperAdminDashboardState();
 }
+
 
 class WeeklySummaryDashboard extends StatelessWidget {
   final Map<String, dynamic> summary;
@@ -114,6 +116,16 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
           : null,
     );
     if (picked != null) {
+        return RoleGuard(
+          allowedRoles: ['super admin', 'admin'],
+          child: Builder(builder: (context) {
+            if (isLoading) {
+              return Scaffold(
+                appBar: AppBar(title: Text('Super Admin Dashboard')),
+                body: Center(child: CircularProgressIndicator()),
+                drawer: _buildDrawer(context),
+              );
+            }
       setState(() {
         selectedStartDate = picked.start;
         selectedEndDate = picked.end;
@@ -174,6 +186,8 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
     } else if (weeklySummary != null && weeklySummary!['startDate'] != null && weeklySummary!['endDate'] != null) {
       start = DateTime.parse(weeklySummary!['startDate']);
       end = DateTime.parse(weeklySummary!['endDate']);
+            }),
+        );
     }
     if (start != null && end != null) {
       weekRange = 'Week: '

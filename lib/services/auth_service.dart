@@ -3,8 +3,11 @@ import 'dart:convert';
 // ignore: depend_on_referenced_packages
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/user_model.dart';
 import '../utils/constants.dart';
+import '../services/missional_community_service.dart';
+import 'api_services.dart';
 
 class AuthException implements Exception {
   final String message;
@@ -18,6 +21,7 @@ class AuthException implements Exception {
 class AuthService {
   static const String _userKey = 'user_data';
   static const String _tokenKey = 'auth_token';
+  static final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   /// Attempts to login and returns a User object if successful
   Future<User?> login({
@@ -25,33 +29,56 @@ class AuthService {
     required String password,
   }) async {
     try {
+      final url = Uri.parse('${ApiService.baseUrl}/login');
       final response = await http
-          .post(
-            Uri.parse('${Constants.apiBaseUrl}/users/login.php'),
-            headers: {'Content-Type': 'application/json'},
-            body: json.encode({'username': username, 'password': password}),
-          )
+          .post(url,
+              headers: {'Content-Type': 'application/json'},
+              body: json.encode({'username': username, 'password': password}))
           .timeout(const Duration(seconds: 15));
 
       final Map<String, dynamic> data = json.decode(response.body);
 
-      if (response.statusCode == 200 && data['status'] == 'success') {
-        // Save user session data
+      if (response.statusCode == 200) {
+        // support both legacy and new shapes
+        final token = data['token'] ?? data['access_token'] ?? data['plainTextToken'] ?? '';
+        final userObj = data['user'] ?? data;
+        if (token == null || (token is String && token.isEmpty)) {
+          throw AuthException(data['message'] ?? 'Login failed');
+        }
+
+        // persist token securely
+        await _secureStorage.write(key: _tokenKey, value: token.toString());
+
+        // save user info in prefs
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(_tokenKey, data['token'] ?? '');
+        final usernameSaved = userObj['username'] ?? userObj['name'] ?? username;
         await prefs.setString(_userKey, json.encode({
-          'username': data['username'],
-          'email': data['email'],
-          'role': data['role'],
-          'mc': data['mc_id']?.toString() ?? '',
+          'username': usernameSaved,
+          'email': userObj['email'] ?? '',
+          'mc': userObj['mc_id']?.toString() ?? userObj['missional_community'] ?? '',
+          'id': userObj['id']?.toString() ?? '',
         }));
+
+        // store display name
+        if (userObj['name'] != null && userObj['name'].toString().isNotEmpty) {
+          await prefs.setString('user_name', userObj['name']);
+        } else {
+          await prefs.setString('user_name', usernameSaved);
+        }
+
+        // fetch and store roles
+        final idStr = userObj['id']?.toString();
+        if (idStr != null && idStr.isNotEmpty) {
+          await _fetchAndStoreRoles(idStr);
+        }
+
         return User(
-          username: data['username'] ?? '',
-          email: data['email'] ?? '',
-          role: data['role'] ?? '',
+          username: usernameSaved ?? '',
+          email: userObj['email'] ?? '',
+          role: prefs.getString('role') ?? '',
           userPassword: '',
-          missionalCommunity: data['mc_id']?.toString() ?? '',
-          id: data['id']?.toString() ?? '',
+          missionalCommunity: userObj['mc_id']?.toString() ?? '',
+          id: idStr ?? '',
         );
       } else {
         throw AuthException(data['message'] ?? 'Login failed');
@@ -97,8 +124,10 @@ class AuthService {
   /// Get authentication token
   Future<String?> getToken() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getString(_tokenKey);
+  final token = await _secureStorage.read(key: _tokenKey);
+  if (token != null) return token;
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getString(_tokenKey);
     } catch (e) {
       return null;
     }
@@ -116,9 +145,29 @@ class AuthService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_userKey);
+      await _secureStorage.delete(key: _tokenKey);
       await prefs.remove(_tokenKey);
     } catch (e) {
       throw AuthException('Failed to logout: ${e.toString()}');
+    }
+  }
+
+  Future<void> _fetchAndStoreRoles(String userId) async {
+    try {
+      final token = await _secureStorage.read(key: _tokenKey);
+      if (token == null) return;
+      final response = await http.get(
+        Uri.parse('${ApiService.baseUrl}/users/$userId/roles'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final roles = (data['roles'] as List?)?.map((r) => r['name']?.toString() ?? '').where((s) => s.isNotEmpty).join(',') ?? '';
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('role', roles);
+      }
+    } catch (_) {
+      // non-fatal
     }
   }
 

@@ -5,17 +5,17 @@ import 'dart:convert';
 // ignore: depend_on_referenced_packages
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/admin_model.dart';
 import '../models/user_model.dart';
 
 class ApiService {
-  static const String baseUrl =
-      'https://divinelifeministriesinternational.org/users/'; // Replace with your API URL
+  static const String baseUrl = 'http://127.0.0.1:8000/api'; // Laravel API base
   static const String tokenKey = 'auth_token';
+  static final _secureStorage = FlutterSecureStorage();
 
   static Future<String?> _getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(tokenKey);
+    return await _secureStorage.read(key: tokenKey);
   }
 
   static Future<Map<String, String>> _getHeaders() async {
@@ -32,7 +32,7 @@ class ApiService {
     String password,
   ) async {
     final response = await http.post(
-      Uri.parse('${baseUrl}login.php'),
+      Uri.parse('$baseUrl/login'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'username': username, 'password': password}),
     );
@@ -40,12 +40,12 @@ class ApiService {
     final data = jsonDecode(response.body);
     if (response.statusCode == 200 && data['status'] == 'success') {
       // Save token and user info
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(tokenKey, data['token'] ?? '');
-      await prefs.setString('username', data['username'] ?? '');
-      await prefs.setString('email', data['email'] ?? '');
-      await prefs.setString('role', data['role'] ?? '');
-      await prefs.setInt('mc_id', int.tryParse(data['mc_id'].toString()) ?? 0);
+  final prefs = await SharedPreferences.getInstance();
+  await _secureStorage.write(key: tokenKey, value: data['token'] ?? '');
+  await prefs.setString('username', data['username'] ?? '');
+  await prefs.setString('email', data['email'] ?? '');
+  await prefs.setString('role', data['role'] ?? '');
+  await prefs.setInt('mc_id', int.tryParse(data['mc_id']?.toString() ?? '0') ?? 0);
       return data;
     } else {
       // Return error response for UI to handle
@@ -54,15 +54,16 @@ class ApiService {
   }
 
   static Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(tokenKey);
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove(tokenKey);
+  await _secureStorage.delete(key: tokenKey);
   }
 
   // Admin Management
   static Future<List<Admin>> getAdmins() async {
     final headers = await _getHeaders();
     final response = await http.get(
-      Uri.parse('${baseUrl}get_admins.php'),
+      Uri.parse('$baseUrl/users?role=admin'),
       headers: headers,
     );
 
@@ -77,7 +78,7 @@ class ApiService {
   static Future<User> getAdmin(int id) async {
     final headers = await _getHeaders();
     final response = await http.get(
-      Uri.parse('$baseUrl/$id'),
+      Uri.parse('$baseUrl/users/$id'),
       headers: headers,
     );
 
@@ -91,11 +92,10 @@ class ApiService {
   static Future<Admin> createAdmin(Admin admin) async {
     final headers = await _getHeaders();
 
-    // Modify the data to match what PHP expects
     final requestData = {
       'username': admin.username,
       'email': admin.email,
-      'mc': admin.mcName, // CHANGE: mc_name to mc
+      'mc_id': admin.mcName, // backend may expect mc_id or mc; adjust if needed
       'password': admin.password,
       'role': admin.role,
     };
@@ -103,7 +103,7 @@ class ApiService {
     print('Sending admin data: ${jsonEncode(requestData)}'); // Debugging
 
     final response = await http.post(
-      Uri.parse('${baseUrl}register.php'),
+      Uri.parse('$baseUrl/register'),
       headers: headers,
       body: jsonEncode(requestData),
     );
@@ -133,12 +133,11 @@ class ApiService {
     final body = admin.toJson();
 
     // Ensure ID is included for update
-    if (admin.id != null) {
-      body['id'] = admin.id;
-    }
+    final id = admin.id;
+    if (id == null) throw Exception('Admin id required for update');
 
     final response = await http.put(
-      Uri.parse('${baseUrl}update_admin.php'),
+      Uri.parse('$baseUrl/users/$id'),
       headers: headers,
       body: jsonEncode(body),
     );
@@ -188,22 +187,20 @@ class ApiService {
   // }
 
   static Future<void> deleteAdmin(int id) async {
-    final response = await http.post(
-      Uri.parse('${baseUrl}delete_user.php'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, dynamic>{'id': id}),
+    final headers = await _getHeaders();
+    final response = await http.delete(
+      Uri.parse('$baseUrl/users/$id'),
+      headers: headers,
     );
-    if (response.statusCode != 200) {
-      throw Exception('Failed to delete Admin');
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete Admin: ${response.body}');
     }
   }
 
   static Future<List<User>> getUsers() async {
     final headers = await _getHeaders();
     final response = await http.get(
-      Uri.parse('${baseUrl}get_users.php'),
+      Uri.parse('$baseUrl/users'),
       headers: headers,
     );
     if (response.statusCode == 200) {
@@ -215,56 +212,66 @@ class ApiService {
   }
 
   static Future<void> promoteToMCLeader(String userId) async {
+    final headers = await _getHeaders();
     final response = await http.post(
-      Uri.parse('${baseUrl}update_user_role.php'),
-      body: {'id': userId, 'role': 'mc_leader'},
+      Uri.parse('$baseUrl/users/$userId/roles'),
+      headers: headers,
+      body: jsonEncode({'role': 'mc_leader'}),
     );
     final data = json.decode(response.body);
-    if (data['success'] != true) {
+    if (response.statusCode >= 400 || data['message'] == null) {
       throw Exception(data['message'] ?? 'Failed to promote user');
     }
   }
 
   static Future<void> addUser(User user) async {
+    final headers = await _getHeaders();
     final response = await http.post(
-      Uri.parse('${baseUrl}add_user.php'),
-      body: user.toJson(),
+      Uri.parse('$baseUrl/register'),
+      headers: headers,
+      body: jsonEncode(user.toJson()),
     );
     final data = json.decode(response.body);
-    if (data['success'] != true) {
+    if (response.statusCode >= 400 || data['message'] == null) {
       throw Exception(data['message'] ?? 'Failed to add user');
     }
   }
 
   static Future<void> updateUser(User user) async {
-    final response = await http.post(
-      Uri.parse('${baseUrl}update_user.php'),
-      body: user.toJson(),
+    final headers = await _getHeaders();
+    final id = user.id;
+    if (id == null) throw Exception('User id required for update');
+    final response = await http.put(
+      Uri.parse('$baseUrl/users/$id'),
+      headers: headers,
+      body: jsonEncode(user.toJson()),
     );
     final data = json.decode(response.body);
-    if (data['success'] != true) {
+    if (response.statusCode >= 400 || data['message'] == null) {
       throw Exception(data['message'] ?? 'Failed to update user');
     }
   }
 
   static Future<void> deleteUser(String userId) async {
-    final response = await http.post(
-      Uri.parse('${baseUrl}delete_user.php'),
-      body: {'id': userId},
+    final headers = await _getHeaders();
+    final response = await http.delete(
+      Uri.parse('$baseUrl/users/$userId'),
+      headers: headers,
     );
-    final data = json.decode(response.body);
-    if (data['success'] != true) {
-      throw Exception(data['message'] ?? 'Failed to delete user');
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete user: ${response.body}');
     }
   }
 
   static Future<void> demoteToMember(String userId) async {
+    final headers = await _getHeaders();
     final response = await http.post(
-      Uri.parse('${baseUrl}update_user_role.php'),
-      body: {'id': userId, 'role': 'member'},
+      Uri.parse('$baseUrl/users/$userId/roles'),
+      headers: headers,
+      body: jsonEncode({'role': 'member'}),
     );
     final data = json.decode(response.body);
-    if (data['success'] != true) {
+    if (response.statusCode >= 400 || data['message'] == null) {
       throw Exception(data['message'] ?? 'Failed to demote user');
     }
   }

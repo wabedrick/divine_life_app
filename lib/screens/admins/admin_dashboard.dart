@@ -12,6 +12,8 @@ import '../login_screen.dart';
 import '../../utils/app_colors.dart';
 import 'user_management_screen.dart';
 
+import '../../widgets/role_guard.dart';
+
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
 
@@ -167,13 +169,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return Scaffold(
-        appBar: AppBar(title: Text('Admins Dashboard')),
-        body: Center(child: CircularProgressIndicator()),
-        drawer: _buildDrawer(context),
-      );
-    }
+    // Wrap the dashboard with RoleGuard to allow only admin and super admin
+    return RoleGuard(
+      allowedRoles: ['admin', 'super admin'],
+      child: Builder(builder: (context) {
+        if (isLoading) {
+          return Scaffold(
+            appBar: AppBar(title: Text('Admins Dashboard')),
+            body: Center(child: CircularProgressIndicator()),
+            drawer: _buildDrawer(context),
+          );
+        }
     // Get week range string if available
     String weekRange = '';
     DateTime? start;
@@ -192,10 +198,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
         + '${(end.subtract(Duration(days: 1))).day}/${(end.subtract(Duration(days: 1))).month}/${(end.subtract(Duration(days: 1))).year}';
     }
     print('WEEK RANGE: ' + weekRange);
-    return Scaffold(
-      appBar: AppBar(title: Text('Admin Dashboard')),
-      backgroundColor: AppColors.dark,
-      body: RefreshIndicator(
+        return Scaffold(
+          appBar: AppBar(title: Text('Admin Dashboard')),
+          backgroundColor: AppColors.dark,
+          body: RefreshIndicator(
         onRefresh: () async {
           setState(() {
             _setCurrentWeek();
@@ -254,6 +260,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
         ),
       ),
       drawer: _buildDrawer(context),
+        );
+      }),
     );
   }
 
