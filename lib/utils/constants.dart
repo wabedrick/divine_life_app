@@ -2,7 +2,7 @@
 class Constants {
   // API endpoints
   static const String apiBaseUrl =
-      'http://divinelifeministriesinternational.org';
+      'http://127.0.0.1:8000/api';
 
   // Local storage keys
   static const String userPrefsKey = 'user_prefs';

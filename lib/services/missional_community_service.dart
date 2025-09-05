@@ -7,7 +7,7 @@ import '../models/mc_model.dart';
 
 class MissionalCommunityService {
   // Base URL for API endpoints
-  static const String baseUrl = 'https://divinelifeministriesinternational.org/missionalCommunity';
+  static const String baseUrl = 'http://127.0.0.1:8000/missionalCommunity';
   // Static header for API requests
   static final Map<String, String> headers = {
     'Content-Type': 'application/json',

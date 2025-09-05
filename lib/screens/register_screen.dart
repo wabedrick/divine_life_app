@@ -31,7 +31,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   // Environment configuration - move to .env file in real production
   static const String apiUrl =
-      'https://divinelifeministriesinternational.org/users/register.php';
+  'http://127.0.0.1:8000/users/register.php';
 
   @override
   void dispose() {

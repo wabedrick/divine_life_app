@@ -4,7 +4,7 @@ import 'dart:convert';
 import '../models/event_model.dart';
 
 class EventService {
-  final String apiUrl = "http://divinelifeministriesinternational.org/events/";
+  final String apiUrl = "http://127.0.0.1:8000/events/";
 
   Future<List<Event>> getEvents() async {
     final response = await http.get(Uri.parse('${apiUrl}read_events.php'));

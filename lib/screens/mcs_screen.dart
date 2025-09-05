@@ -27,7 +27,7 @@ class _MCsScreenState extends State<MCsScreen> {
   Future<void> _fetchMCs() async {
     final response = await http.get(
       Uri.parse(
-        'http://divinelifeministriesinternational.org/missionalCommunity/fetch_mcs.php',
+  'http://127.0.0.1:8000/missionalCommunity/fetch_mcs.php',
       ),
     );
     if (response.statusCode == 200) {

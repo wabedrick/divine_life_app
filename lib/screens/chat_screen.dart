@@ -30,7 +30,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _fetchMessages() async {
     final response = await http.get(
       Uri.parse(
-        'http://divinelifeministriesinternational.org/messages/fetch_message.php',
+  'http://127.0.0.1:8000/messages/fetch_message.php',
       ),
     );
     if (response.statusCode == 200) {
@@ -46,7 +46,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (_messageController.text.isNotEmpty) {
       final response = await http.post(
         Uri.parse(
-          'http://divinelifeministriesinternational.org/messages/send_message.php',
+          'http://127.0.0.1:8000/messages/send_message.php',
         ),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
@@ -66,7 +66,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _deleteMessage(String messageId) async {
     final response = await http.post(
       Uri.parse(
-        'http://divinelifeministriesinternational.org/messages/delete_message.php',
+  'http://127.0.0.1:8000/messages/delete_message.php',
       ),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'message_id': messageId}),
@@ -80,7 +80,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _addComment(String messageId, String comment) async {
     final response = await http.post(
       Uri.parse(
-        'http://divinelifeministriesinternational.org/messages/add_comment.php',
+  'http://127.0.0.1:8000/messages/add_comment.php',
       ),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({

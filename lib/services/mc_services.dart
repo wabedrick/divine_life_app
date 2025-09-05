@@ -5,8 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/weekly_report_model.dart';
 
 class McServices {
-  static const String _reportsFetchUrl = 'https://divinelifeministriesinternational.org/missionalCommunity/weekly_reports_fetch.php';
-  static const String _reportSubmitUrl = 'https://divinelifeministriesinternational.org/missionalCommunity/weekly_report_submit.php';
+  static const String _reportsFetchUrl = 'http://127.0.0.1:8000/missionalCommunity/weekly_reports_fetch.php';
+  static const String _reportSubmitUrl = 'http://127.0.0.1:8000/missionalCommunity/weekly_report_submit.php';
 
   static Future<List<WeeklyReport>> fetchAllReports({String? startDate, String? endDate, String? mcName}) async {
     final params = <String, String>{};
@@ -17,7 +17,7 @@ class McServices {
     if (mcName != null && mcName.isNotEmpty) {
       params['mcName'] = mcName;
     }
-    final uri = Uri.parse('https://divinelifeministriesinternational.org/missionalCommunity/weekly_reports_fetch.php')
+  final uri = Uri.parse('http://127.0.0.1:8000/missionalCommunity/weekly_reports_fetch.php')
       .replace(queryParameters: params);
     final response = await http.get(uri, headers: {'Content-Type': 'application/json'});
     final data = json.decode(response.body);
@@ -123,7 +123,7 @@ class McServices {
   }
 
   static Future<Map<String, dynamic>> fetchWeeklySummary({String? startDate, String? endDate}) async {
-    final uri = Uri.parse('https://divinelifeministriesinternational.org/missionalCommunity/weekly_summary.php')
+  final uri = Uri.parse('http://127.0.0.1:8000/missionalCommunity/weekly_summary.php')
       .replace(queryParameters: {
         if (startDate != null && endDate != null) ...{
           'startDate': startDate,

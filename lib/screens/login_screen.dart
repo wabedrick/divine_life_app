@@ -45,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // Send a POST request to the login endpoint
       final response = await http.post(
         Uri.parse(
-          'http://divinelifeministriesinternational.org/users/login.php',
+          'http://127.0.0.1:8000/users/login.php',
         ),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({

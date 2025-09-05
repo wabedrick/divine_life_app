@@ -1,6 +1,6 @@
 class API {
   // Base URL for the API
-  static const String _baseURL = "http://divinelifeministriesinternational.org";
+  static const String _baseURL = "http://127.0.0.1:8000";
 
   // User-related endpoints
   static const String _userEndpoint = "$_baseURL/users";

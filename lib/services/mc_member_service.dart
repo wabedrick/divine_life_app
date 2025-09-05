@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import '../models/mc_member_model.dart';
 
 class McMemberServices {
-  static const String baseUrl = 'https://divinelifeministriesinternational.org/mcMembers/mc_members.php';
+  static const String baseUrl = 'http://127.0.0.1:8000/mcMembers/mc_members.php';
 
   // Get all members
   static Future<List<MCMember>> getMembers({bool? activeOnly, String? mcName}) async {
