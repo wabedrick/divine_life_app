@@ -116,20 +116,12 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
           : null,
     );
     if (picked != null) {
-        return RoleGuard(
-          allowedRoles: ['super admin', 'admin'],
-          child: Builder(builder: (context) {
-            if (isLoading) {
-              return Scaffold(
-                appBar: AppBar(title: Text('Super Admin Dashboard')),
-                body: Center(child: CircularProgressIndicator()),
-                drawer: _buildDrawer(context),
-              );
-            }
       setState(() {
         selectedStartDate = picked.start;
         selectedEndDate = picked.end;
       });
+
+      // Refresh data for the chosen week
       await _loadWeeklySummary();
       await _loadDashboardData();
     }
@@ -186,8 +178,6 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
     } else if (weeklySummary != null && weeklySummary!['startDate'] != null && weeklySummary!['endDate'] != null) {
       start = DateTime.parse(weeklySummary!['startDate']);
       end = DateTime.parse(weeklySummary!['endDate']);
-            }),
-        );
     }
     if (start != null && end != null) {
       weekRange = 'Week: '
